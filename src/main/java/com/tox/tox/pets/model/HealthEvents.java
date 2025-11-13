@@ -42,9 +42,9 @@ public class HealthEvents implements Serializable {
     private Long petId;
 
     /**
-     * 事件类型 (关联 health_event_type 枚举)
+     * 事件类型
      */
-    private String eventType;
+    private Long eventTypeId;
 
     /**
      * 事件实际发生日期
