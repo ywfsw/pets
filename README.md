@@ -22,14 +22,16 @@
 ```bash
 git clone [你的代码仓库 URL]
 cd pets
-2. 准备数据库
+```
+
+#### 2. 准备数据库
 本项目使用 PostgreSQL。
 
 你需要一个数据库实例（推荐使用 Neon 的免费套餐）。
 
 在你的数据库中，手动执行项目中的 DDL 脚本来创建 pets, weight_log, health_events 表结构。
 
-3. 配置连接
+#### 3. 配置连接
 在 src/main/resources/ 目录下，找到 application.properties 文件。
 
 修改以下配置，使其指向你自己的数据库：
@@ -47,7 +49,7 @@ spring.datasource.username=YOUR_USERNAME
 
 # 你的数据库密码
 spring.datasource.password=YOUR_SECURE_PASSWORD
-4. 运行应用
+#### 4. 运行应用
 （推荐）在你的 IDE (IntelliJ IDEA / Eclipse) 中，找到 PetsApplication.java (或你的主启动类)，右键点击并“运行”。
 
 或者使用 Maven 命令行：
