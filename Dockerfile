@@ -1,6 +1,6 @@
 # --- 第 1 阶段: 构建 ---
 # 使用一个官方的 Maven/Java 25 镜像来构建应用
-FROM maven:3.9-eclipse-temurin-25-jammy AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 
 # 设置工作目录
 WORKDIR /app
