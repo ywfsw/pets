@@ -22,6 +22,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/dictItems")
+@CrossOrigin(origins = "*")
 public class DictItemsController {
 
     @Autowired

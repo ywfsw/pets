@@ -32,6 +32,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/pets")
+@CrossOrigin(origins = "*")
 public class PetsController {
 
     @Autowired
