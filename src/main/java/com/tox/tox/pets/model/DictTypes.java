@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -44,7 +44,7 @@ public class DictTypes implements Serializable {
     /**
      * 记录创建时间
      */
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 父级字典编码 (用于管理后台的类型分组)
