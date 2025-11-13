@@ -1,0 +1,50 @@
+# #################################################################
+# ## 架构师（“开发大佬”）推荐：Tox (Java / Maven / IDEA / Node) 专用 ##
+# #################################################################
+
+### 1. (关键) IntelliJ IDEA 配置文件
+# 这是（Tox）你（Tox）本地的 IDE 设置（Tox）（窗口布局、历史记录等）
+# 100% 不能提交，它（Tox）会导致（Tox）你（Tox）的（Tox）同事配置冲突。
+.idea/
+*.iml
+*.ipr
+*.iws
+
+### 2. (关键) Maven / Java 编译产物
+# 这是（Tox）你（Tox）的 "mvn package" 的（Tox）所有输出
+# （Tox）我们（Tox 和“开发大佬”）永远只提交源代码，绝不提交编译后的 .class 或 .jar
+target/
+build/
+
+# Maven 垃圾文件
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+### 3. (关键) macOS 系统垃圾
+# （Tox）你（Tox）在 Finder (访达) 中浏览目录时，系统自动生成的“指纹”
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Trashes
+
+### 4. (关键) Node.js 依赖
+# (（Tox）我（“开发大佬”）在你（Tox）的 brew list 中看到了 node)
+# node_modules 是一个（Tox）“黑洞”，体积巨大，永远不能提交
+node_modules/
+npm-debug.log*
+yarn-error.log
+pnpm-debug.log
+
+### 5. (关键) 日志与运行时文件
+# （Tox）你（Tox）的 Spring Boot 运行日志
+*.log
+logs/
+
+# （Tox）你（Tox）的（Tox）JVM 崩溃日志
+hs_err_pid*
+replay_pid*
