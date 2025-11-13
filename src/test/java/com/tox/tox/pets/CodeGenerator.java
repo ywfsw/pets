@@ -24,7 +24,7 @@ public class CodeGenerator {
     private static final String DB_USERNAME = "neondb_owner";
 
     // 要生成的表名 (我们之前创建的)
-    private static final List<String> TABLES_TO_GENERATE = Arrays.asList("dict_items");
+    private static final List<String> TABLES_TO_GENERATE = Arrays.asList("dict_types");
 
     // 基础包名 (根据你的 pom.xml)
     private static final String BASE_PACKAGE = "com.tox.tox.pets";
