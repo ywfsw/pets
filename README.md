@@ -313,6 +313,18 @@ mvn spring-boot:run
 | DELETE | `/dictItems/{id}` | 根据ID删除字典项 | N/A | `"字典项删除成功，ID：1"` |
 | GET | `/dictItems/code/{dictCode}` | 根据字典编码获取字典项列表 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
 
+### 5. 字典类型接口
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| POST | `/dictTypes` | 添加字典类型 | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "notes": "用于定义宠物的物种分类", "parentCode": "PET_BASIC_INFO"}` | `"字典类型添加成功，编码：PET_SPECIES"` |
+| GET | `/dictTypes` | 获取所有字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
+| GET | `/dictTypes/page` | 分页获取字典类型 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 15, "size": 10, "current": 1, ...}` |
+| GET | `/dictTypes/{dictCode}` | 根据字典编码获取字典类型 | N/A | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}` |
+| GET | `/dictTypes/parent/{parentCode}` | 根据父级编码获取字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
+| PUT | `/dictTypes/{dictCode}` | 更新字典类型 | `{"dictName": "宠物物种分类", "notes": "更新的备注信息", "parentCode": "PET_BASIC_INFO"}` | `"字典类型更新成功，编码：PET_SPECIES"` |
+| DELETE | `/dictTypes/{dictCode}` | 删除字典类型 | N/A | `"字典类型删除成功，编码：PET_SPECIES"` |
+
 ## 🔮 未来功能规划
 
 - [ ] 用户认证和授权系统
