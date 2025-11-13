@@ -1,4 +1,4 @@
-package com.example.tox.tox;
+package com.tox.tox.pets;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

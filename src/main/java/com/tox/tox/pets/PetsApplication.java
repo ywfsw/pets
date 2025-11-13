@@ -1,4 +1,4 @@
-package com.example.tox.tox;
+package com.tox.tox.pets;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
