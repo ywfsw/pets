@@ -24,7 +24,7 @@ public class CodeGenerator {
     private static final String DB_USERNAME = "neondb_owner";
 
     // 要生成的表名 (我们之前创建的)
-    private static final List<String> TABLES_TO_GENERATE = Arrays.asList("pets", "weight_log", "health_events");
+    private static final List<String> TABLES_TO_GENERATE = Arrays.asList("dict_items");
 
     // 基础包名 (根据你的 pom.xml)
     private static final String BASE_PACKAGE = "com.tox.tox.pets";
@@ -68,13 +68,16 @@ public class CodeGenerator {
                             .enableLombok() // ❗ 开启 Lombok
                             .naming(NamingStrategy.underline_to_camel) // 表名转驼峰
                             .columnNaming(NamingStrategy.underline_to_camel) // 字段转驼峰
+                            .enableFileOverride()
                             
                             // --- Mapper 策略 ---
                             .mapperBuilder()
                             .enableMapperAnnotation() // ❗ 在 Mapper 接口上添加 @Mapper 注解
+                            .enableFileOverride()
                             
                             // --- Controller 策略 ---
                             .controllerBuilder()
+                            .enableFileOverride()
                             .enableRestStyle(); // ❗ 开启 @RestController 风格
                 })
                 .execute(); // 执行

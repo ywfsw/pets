@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -31,14 +32,14 @@ public class PetsController {
      * 添加宠物
      */
     @PostMapping
-    public ResponseEntity<Pets> addPet(@RequestBody Pets pet) {
+    public ResponseEntity<String> addPet(@RequestBody Pets pet) {
         // 设置创建时间
-        pet.setCreatedAt(LocalDateTime.now());
+        pet.setCreatedAt(OffsetDateTime.now());
         boolean saved = petsService.save(pet);
         if (saved) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(pet);
+            return ResponseEntity.status(HttpStatus.CREATED).body("宠物添加成功，ID：" + pet.getId());
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("宠物添加失败");
         }
     }
 

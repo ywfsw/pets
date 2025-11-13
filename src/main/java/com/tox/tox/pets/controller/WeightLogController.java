@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -31,14 +32,14 @@ public class WeightLogController {
      * 添加体重记录
      */
     @PostMapping
-    public ResponseEntity<WeightLog> addWeightLog(@RequestBody WeightLog log) {
+    public ResponseEntity<String> addWeightLog(@RequestBody WeightLog log) {
         // 设置创建时间
-        log.setCreatedAt(LocalDateTime.now());
+        log.setCreatedAt(OffsetDateTime.now());
         boolean saved = weightLogService.save(log);
         if (saved) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(log);
+            return ResponseEntity.status(HttpStatus.CREATED).body("体重记录添加成功，ID：" + log.getId());
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("体重记录添加失败");
         }
     }
 

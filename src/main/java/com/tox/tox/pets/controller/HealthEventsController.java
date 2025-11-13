@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -31,14 +32,14 @@ public class HealthEventsController {
      * 添加健康事件
      */
     @PostMapping
-    public ResponseEntity<HealthEvents> addHealthEvent(@RequestBody HealthEvents event) {
+    public ResponseEntity<String> addHealthEvent(@RequestBody HealthEvents event) {
         // 设置创建时间
-        event.setCreatedAt(LocalDateTime.now());
+        event.setCreatedAt(OffsetDateTime.now());
         boolean saved = healthEventsService.save(event);
         if (saved) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(event);
+            return ResponseEntity.status(HttpStatus.CREATED).body("健康事件添加成功，ID：" + event.getId());
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("健康事件添加失败");
         }
     }
 

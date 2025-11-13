@@ -7,9 +7,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * <p>
@@ -25,6 +27,7 @@ import java.time.LocalDateTime;
 @TableName("health_events")
 public class HealthEvents implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -61,5 +64,5 @@ public class HealthEvents implements Serializable {
     /**
      * 记录创建时间
      */
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 }
