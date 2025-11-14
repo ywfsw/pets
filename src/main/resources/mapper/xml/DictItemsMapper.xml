@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tox.tox.pets.mapper.DictItemsMapper">
+    <select id="selectLookupByCode"
+            parameterType="java.lang.String"
+            resultType="com.tox.tox.pets.model.DictItems">
+        SELECT
+            id, dict_code, item_value, item_label, parent_id, sort_order, notes, created_at
+        FROM
+            dict_items
+        <where>
+            <if test="dictCode != null">
+            dict_code = #{dictCode}
+        </if>
+        </where>
+        ORDER BY
+            sort_order ASC, id ASC
+    </select>
+</mapper>

@@ -2,6 +2,9 @@ package com.tox.tox.pets.service;
 
 import com.tox.tox.pets.model.DictItems;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tox.tox.pets.model.dto.DictItemLookupDTO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IDictItemsService extends IService<DictItems> {
 
+    List<DictItemLookupDTO> findLookupByCode(String dictCode);
 }

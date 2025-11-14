@@ -3,7 +3,9 @@ package com.tox.tox.pets.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictItems;
+import com.tox.tox.pets.model.dto.DictItemLookupDTO;
 import com.tox.tox.pets.service.IDictItemsService;
+import io.micrometer.common.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -122,5 +124,21 @@ public class DictItemsController {
         queryWrapper.orderByAsc("sort_order", "id");
         List<DictItems> dictItems = dictItemsService.list(queryWrapper);
         return ResponseEntity.ok(dictItems);
+    }
+
+    /**
+     * 【新】查找接口 (用于父级ID下拉选择器)
+     *
+     * @param dictCode 必须传入的字典类型编码 (e.g., "PET_SPECIES")
+     * @return 字典项列表 (非分页)
+     */
+    @GetMapping("/lookup")
+    public ResponseEntity<List<DictItemLookupDTO>> getDictItemLookup(
+            @RequestParam("dictCode") String dictCode) {
+
+        // 2. 调用 Service, Service 会调用 Mapper
+        List<DictItemLookupDTO> results = dictItemsService.findLookupByCode(dictCode);
+
+        return ResponseEntity.ok(results);
     }
 }

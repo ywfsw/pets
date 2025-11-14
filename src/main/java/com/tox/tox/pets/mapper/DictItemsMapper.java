@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tox.tox.pets.model.DictItems;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * <p>
  * 通用字典项表 Mapper 接口
@@ -15,4 +17,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface DictItemsMapper extends BaseMapper<DictItems> {
 
+    List<DictItems> selectLookupByCode(String dictCode);
 }
