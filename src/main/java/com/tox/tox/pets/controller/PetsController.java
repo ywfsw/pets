@@ -1,6 +1,7 @@
 package com.tox.tox.pets.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictItems;
 import com.tox.tox.pets.model.HealthEvents;
@@ -8,6 +9,7 @@ import com.tox.tox.pets.model.Pets;
 import com.tox.tox.pets.model.WeightLog;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
 import com.tox.tox.pets.model.dto.PetDetailDTO;
+import com.tox.tox.pets.model.dto.PetPageDTO;
 import com.tox.tox.pets.service.IDictItemsService;
 import com.tox.tox.pets.service.IHealthEventsService;
 import com.tox.tox.pets.service.IPetsService;
@@ -31,7 +33,7 @@ import java.util.List;
  * @since 2025-11-13
  */
 @RestController
-@RequestMapping("/pets")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class PetsController {
 
@@ -50,7 +52,7 @@ public class PetsController {
     /**
      * 添加宠物
      */
-    @PostMapping
+    @PostMapping("/pets")
     public ResponseEntity<String> addPet(@RequestBody Pets pet) {
         // 设置创建时间
         pet.setCreatedAt(OffsetDateTime.now());
@@ -65,28 +67,35 @@ public class PetsController {
     /**
      * 获取宠物列表
      */
-    @GetMapping
+    @GetMapping("/pets")
     public ResponseEntity<List<Pets>> listPets() {
         List<Pets> pets = petsService.list();
         return ResponseEntity.ok(pets);
     }
 
+
     /**
-     * 分页查询宠物
+     * (❗ 升级) GET /api/pets/page
+     * (MyBatis-Plus Version)
+     * (完全匹配你的 API 文档)
      */
-    @GetMapping("/page")
-    public ResponseEntity<Page<Pets>> pagePets(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        Page<Pets> page = new Page<>(pageNum, pageSize);
-        Page<Pets> resultPage = petsService.page(page);
-        return ResponseEntity.ok(resultPage);
+    @GetMapping("/pets/page")
+    public ResponseEntity<IPage<PetPageDTO>> getPetPage(
+            // (❗) 接收 Query 参数, 匹配你的 API 文档
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize);
+
+        // (❗) IPage<...> 序列化后的 JSON 结构
+        // (完美匹配你 API 文档里的 "records", "total", "size", "current")
+        return ResponseEntity.ok(page);
     }
 
     /**
      * 根据ID获取宠物信息
      */
-    @GetMapping("/{id}")
+    @GetMapping("/pets/{id}")
     public ResponseEntity<Pets> getPetById(@PathVariable Long id) {
         Pets pet = petsService.getById(id);
         if (pet != null) {
@@ -99,7 +108,7 @@ public class PetsController {
     /**
      * 根据ID获取宠物详细信息
      */
-    @GetMapping("/detail/{id}")
+    @GetMapping("/pets/detail/{id}")
     public ResponseEntity<PetDetailDTO> getPetDetailById(@PathVariable Long id) {
         // 1. 查询宠物基本信息
         Pets pet = petsService.getById(id);
@@ -178,7 +187,7 @@ public class PetsController {
     /**
      * 根据ID更新宠物信息
      */
-    @PutMapping("/{id}")
+    @PutMapping("/pets/{id}")
     public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody Pets pet) {
         // 确保ID一致
         pet.setId(id);
@@ -200,7 +209,7 @@ public class PetsController {
     /**
      * 根据ID删除宠物
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/pets/{id}")
     public ResponseEntity<Void> deletePet(@PathVariable Long id) {
         boolean deleted = petsService.removeById(id);
         if (deleted) {
@@ -213,7 +222,7 @@ public class PetsController {
     /**
      * 根据物种查询宠物
      */
-    @GetMapping("/species/{species}")
+    @GetMapping("/pets/species/{species}")
     public ResponseEntity<List<Pets>> getPetsBySpecies(@PathVariable String species) {
         QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("species", species);

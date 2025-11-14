@@ -21,7 +21,7 @@ import java.util.List;
  * @since 2025-11-13
  */
 @RestController
-@RequestMapping("/dictTypes")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class DictTypesController {
 
@@ -31,7 +31,7 @@ public class DictTypesController {
     /**
      * 添加字典类型
      */
-    @PostMapping
+    @PostMapping("/dictTypes")
     public ResponseEntity<String> addDictType(@RequestBody DictTypes dictType) {
         // 设置创建时间
         dictType.setCreatedAt(OffsetDateTime.now());
@@ -46,7 +46,7 @@ public class DictTypesController {
     /**
      * 获取字典类型列表
      */
-    @GetMapping
+    @GetMapping("/dictTypes")
     public ResponseEntity<List<DictTypes>> listDictTypes() {
         List<DictTypes> dictTypes = dictTypesService.list();
         return ResponseEntity.ok(dictTypes);
@@ -55,7 +55,7 @@ public class DictTypesController {
     /**
      * 分页查询字典类型
      */
-    @GetMapping("/page")
+    @GetMapping("/dictTypes/page")
     public ResponseEntity<Page<DictTypes>> pageDictTypes(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -67,7 +67,7 @@ public class DictTypesController {
     /**
      * 根据字典编码获取字典类型
      */
-    @GetMapping("/{dictCode}")
+    @GetMapping("/dictTypes/{dictCode}")
     public ResponseEntity<DictTypes> getDictTypeByCode(@PathVariable String dictCode) {
         DictTypes dictType = dictTypesService.getById(dictCode);
         if (dictType != null) {
@@ -80,7 +80,7 @@ public class DictTypesController {
     /**
      * 根据父级编码获取字典类型列表
      */
-    @GetMapping("/parent/{parentCode}")
+    @GetMapping("/dictTypes/parent/{parentCode}")
     public ResponseEntity<List<DictTypes>> getDictTypesByParentCode(@PathVariable String parentCode) {
         QueryWrapper<DictTypes> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_code", parentCode);
@@ -91,7 +91,7 @@ public class DictTypesController {
     /**
      * 更新字典类型
      */
-    @PutMapping("/{dictCode}")
+    @PutMapping("/dictTypes/{dictCode}")
     public ResponseEntity<String> updateDictType(@PathVariable String dictCode, @RequestBody DictTypes dictType) {
         // 确保字典编码一致
         dictType.setDictCode(dictCode);
@@ -113,7 +113,7 @@ public class DictTypesController {
     /**
      * 删除字典类型
      */
-    @DeleteMapping("/{dictCode}")
+    @DeleteMapping("/dictTypes/{dictCode}")
     public ResponseEntity<String> deleteDictType(@PathVariable String dictCode) {
         boolean deleted = dictTypesService.removeById(dictCode);
         if (deleted) {

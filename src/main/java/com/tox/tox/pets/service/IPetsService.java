@@ -1,7 +1,9 @@
 package com.tox.tox.pets.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tox.tox.pets.model.Pets;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tox.tox.pets.model.dto.PetPageDTO;
 
 /**
  * <p>
@@ -12,5 +14,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-11-13
  */
 public interface IPetsService extends IService<Pets> {
-
+    /**
+     * (❗ 核心业务) 分页获取宠物, 并聚合点赞数
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return DTO 的分页
+     */
+    IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize);
 }

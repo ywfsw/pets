@@ -1,220 +1,3 @@
-用户99286001976
-生成一份接口文档,更新在README.md中​
-TRAE AI
-思考过程
-用户要求生成一份接口文档并更新在README.md中。我需要：
-
-首先搜索代码库，了解项目结构和API接口
-查看现有的README.md文件
-分析项目中的API相关代码
-生成接口文档并更新README.md
-让我先使用search_codebase工具来搜索API相关的信息。
-
-我需要先搜索代码库，了解项目的API接口结构，然后查看现有的README.md文件，最后生成接口文档。
-
-.java
-DictItemsController.java
-1-4
-.md
-README.md
-12-19
-.java
-PetsController.java
-1-14
-.md
-README.md
-184-187
-.md
-README.md
-176-183
-.xml
-pom.xml
-1-51
-.md
-README.md
-8-11
-.java
-HealthEventsController.java
-1-14
-.xml
-pom.xml
-51-102
-.md
-README.md
-188-190
-.md
-README.md
-124-127
-.java
-WeightLogController.java
-1-14
-.md
-README.md
-101-113
-.xml
-pom.xml
-102-111
-.md
-README.md
-115-125
-.java
-PetsApplicationTests.java
-1-4
-.md
-README.md
-2-7
-.md
-README.md
-20-29
-.java
-IDictItemsService.java
-1-4
-.md
-README.md
-137-140
-.java
-PetsApplication.java
-1-4
-.md
-README.md
-90-100
-.java
-DictItemsServiceImpl.java
-1-7
-.java
-DictItemsMapper.java
-1-5
-.properties
-application.properties
-1-15
-.java
-CodeGenerator.java
-1-7
-.md
-README.md
-128-138
-.java
-IPetsService.java
-1-4
-.java
-IHealthEventsService.java
-1-4
-.java
-PetsServiceImpl.java
-1-7
-.java
-PetsMapper.java
-1-5
-.java
-HealthEventsServiceImpl.java
-1-7
-.java
-DictItems.java
-1-11
-.java
-HealthEventsMapper.java
-1-5
-.java
-WeightLogMapper.java
-1-5
-.md
-README.md
-71-89
-.java
-HealthEvents.java
-1-13
-.java
-IWeightLogService.java
-1-4
-.md
-README.md
-32-70
-.java
-Pets.java
-1-13
-.java
-WeightLogServiceImpl.java
-1-7
-.gitignore
-1-50
-mvnw
-1-30
-.md
-README.md
-141-152
-.java
-WeightLog.java
-1-14
-.md
-README.md
-154-165
-.cmd
-mvnw.cmd
-1-30
-mvnw
-30-75
-.xml
-PetsMapper.xml
-1-6
-.xml
-DictItemsMapper.xml
-1-6
-.xml
-HealthEventsMapper.xml
-1-6
-.gitattributes
-1-3
-.xml
-WeightLogMapper.xml
-1-6
-.md
-README.md
-166-175
-mvnw
-123-154
-.cmd
-mvnw.cmd
-30-68
-.cmd
-mvnw.cmd
-105-139
-mvnw
-196-222
-mvnw
-75-123
-.cmd
-mvnw.cmd
-68-105
-mvnw
-154-196
-mvnw
-292-296
-mvnw
-222-252
-.cmd
-mvnw.cmd
-165-190
-.cmd
-mvnw.cmd
-139-165
-mvnw
-252-292
-让我查看HealthEventsController和WeightLogController的完整代码，以便了解所有可用的API接口细节。
-
-src/main/java/com/tox/tox/pets/controller/HealthEventsController.java
-src/main/java/com/tox/tox/pets/controller/WeightLogController.java
-让我查看DictItemsController的完整代码，以及完整的PetsController代码，以便了解所有API接口。
-
-src/main/java/com/tox/tox/pets/controller/DictItemsController.java
-src/main/java/com/tox/tox/pets/controller/PetsController.java
-现在让我查看现有的README.md文件，以便更新接口文档。
-
-README.md
-我已经收集了所有的API接口信息，现在将更新README.md文件，创建一个完整的接口文档。
-
-
-markdown
-Apply
 # 宠物管家 API (Pet Manager API) 🐾
 
 ## 💡 项目简介
@@ -262,68 +45,82 @@ mvn spring-boot:run
 
 ## 📦 API 接口文档
 
-### 1. 宠物管理接口
+### 0. 健康检查接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
-| POST | `/pets` | 创建新宠物 | `{"speciesId": 1, "breedId": 2, "name": "咪咪", "birthday": "2020-01-01"}` | `"宠物添加成功，ID：1"` |
-| GET | `/pets` | 获取所有宠物列表 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
-| GET | `/pets/page` | 分页获取宠物列表 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 100, "size": 10, "current": 1, ...}` |
-| GET | `/pets/{id}` | 根据ID获取宠物基本信息 | N/A | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
-| GET | `/pets/detail/{id}` | 根据ID获取宠物详细信息(包含体重和健康事件) | N/A | `{"id": 1, "speciesLabel": "猫", "breedLabel": "英短", "name": "咪咪", "weightLogs": [...], "healthEvents": [...]}` |
-| PUT | `/pets/{id}` | 根据ID更新宠物信息 | `{"speciesId": 1, "breedId": 3, "name": "咪咪", "birthday": "2020-01-01"}` | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
-| DELETE | `/pets/{id}` | 根据ID删除宠物 | N/A | 204 No Content |
-| GET | `/pets/species/{species}` | 根据物种查询宠物 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
+| GET | `/ping` | 健康检查接口 | N/A | `"pong"` |
 
-### 2. 健康事件接口
+### 1. 点赞功能接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
-| POST | `/health-events` | 创建健康事件 | `{"petId": 1, "eventTypeId": 1, "eventDate": "2023-10-01", "nextDueDate": "2024-04-01", "notes": "狂犬疫苗"}` | `"健康事件添加成功，ID：1"` |
-| GET | `/health-events` | 获取所有健康事件 | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, ...}]` |
-| GET | `/health-events/page` | 分页获取健康事件 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 50, "size": 10, "current": 1, ...}` |
-| GET | `/health-events/{id}` | 根据ID获取健康事件 | N/A | `{"id": 1, "petId": 1, "eventTypeId": 1, ...}` |
-| PUT | `/health-events/{id}` | 根据ID更新健康事件 | `{"petId": 1, "eventTypeId": 1, "eventDate": "2023-10-01", "nextDueDate": "2024-05-01", "notes": "更新的疫苗信息"}` | `{"id": 1, "petId": 1, "eventTypeId": 1, ...}` |
-| DELETE | `/health-events/{id}` | 根据ID删除健康事件 | N/A | 204 No Content |
-| GET | `/health-events/pet/{petId}` | 根据宠物ID获取健康事件 | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, ...}]` |
-| GET | `/health-events/upcoming` | 获取即将到期的健康事件（7天内） | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, "nextDueDate": "2023-11-20", ...}]` |
+| POST | `/api/pets/{petId}/like` | 点赞一个宠物 | N/A | `{"success": true, "message": "点赞成功"}` |
+| GET | `/api/pets/{petId}/likes/count` | 获取宠物的总点赞数 | N/A | `{"petId": 1, "count": 10}` |
 
-### 3. 体重记录接口
+### 2. 宠物管理接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
-| POST | `/weight-logs` | 添加体重记录 | `{"petId": 1, "weightKg": 5.20, "logDate": "2023-11-13", "notes": "正常体重范围"}` | `"体重记录添加成功，ID：1"` |
-| GET | `/weight-logs` | 获取所有体重记录 | N/A | `[{"id": 1, "petId": 1, "weightKg": 5.20, ...}]` |
-| GET | `/weight-logs/page` | 分页获取体重记录 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 30, "size": 10, "current": 1, ...}` |
-| GET | `/weight-logs/{id}` | 根据ID获取体重记录 | N/A | `{"id": 1, "petId": 1, "weightKg": 5.20, ...}` |
-| PUT | `/weight-logs/{id}` | 根据ID更新体重记录 | `{"petId": 1, "weightKg": 5.30, "logDate": "2023-11-13", "notes": "轻微增加"}` | `{"id": 1, "petId": 1, "weightKg": 5.30, ...}` |
-| DELETE | `/weight-logs/{id}` | 根据ID删除体重记录 | N/A | 204 No Content |
-| GET | `/weight-logs/pet/{petId}` | 根据宠物ID获取体重记录历史 | N/A | `[{"id": 1, "petId": 1, "weightKg": 5.20, ...}]` |
-| GET | `/weight-logs/pet/{petId}/latest` | 获取宠物最新体重记录 | N/A | `{"id": 1, "petId": 1, "weightKg": 5.20, "logDate": "2023-11-13", ...}` |
+| POST | `/api/pets` | 创建新宠物 | `{"speciesId": 1, "breedId": 2, "name": "咪咪", "birthday": "2020-01-01"}` | `"宠物添加成功，ID：1"` |
+| GET | `/api/pets` | 获取所有宠物列表 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
+| GET | `/api/pets/page` | 分页获取宠物列表 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 100, "size": 10, "current": 1, ...}` |
+| GET | `/api/pets/{id}` | 根据ID获取宠物基本信息 | N/A | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
+| GET | `/api/pets/detail/{id}` | 根据ID获取宠物详细信息(包含体重和健康事件) | N/A | `{"id": 1, "speciesLabel": "猫", "breedLabel": "英短", "name": "咪咪", "weightLogs": [...], "healthEvents": [...]}` |
+| PUT | `/api/pets/{id}` | 根据ID更新宠物信息 | `{"speciesId": 1, "breedId": 3, "name": "咪咪", "birthday": "2020-01-01"}` | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
+| DELETE | `/api/pets/{id}` | 根据ID删除宠物 | N/A | 204 No Content |
+| GET | `/api/pets/species/{species}` | 根据物种查询宠物 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
 
-### 4. 字典项接口
-
-| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
-|------|------|------|---------------|------------------|
-| POST | `/dictItems` | 添加字典项 | `{"dictCode": "pet_species", "itemValue": "cat", "itemLabel": "猫", "sortOrder": 1}` | `"字典项添加成功，ID：1"` |
-| GET | `/dictItems` | 获取所有字典项 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
-| GET | `/dictItems/page` | 分页获取字典项 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 20, "size": 10, "current": 1, ...}` |
-| GET | `/dictItems/{id}` | 根据ID获取字典项 | N/A | `{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}` |
-| PUT | `/dictItems/{id}` | 根据ID更新字典项 | `{"dictCode": "pet_species", "itemValue": "cat", "itemLabel": "猫咪", "sortOrder": 1}` | `"字典项更新成功，ID：1"` |
-| DELETE | `/dictItems/{id}` | 根据ID删除字典项 | N/A | `"字典项删除成功，ID：1"` |
-| GET | `/dictItems/code/{dictCode}` | 根据字典编码获取字典项列表 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
-
-### 5. 字典类型接口
+### 3. 健康事件接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
-| POST | `/dictTypes` | 添加字典类型 | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "notes": "用于定义宠物的物种分类", "parentCode": "PET_BASIC_INFO"}` | `"字典类型添加成功，编码：PET_SPECIES"` |
-| GET | `/dictTypes` | 获取所有字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
-| GET | `/dictTypes/page` | 分页获取字典类型 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 15, "size": 10, "current": 1, ...}` |
-| GET | `/dictTypes/{dictCode}` | 根据字典编码获取字典类型 | N/A | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}` |
-| GET | `/dictTypes/parent/{parentCode}` | 根据父级编码获取字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
-| PUT | `/dictTypes/{dictCode}` | 更新字典类型 | `{"dictName": "宠物物种分类", "notes": "更新的备注信息", "parentCode": "PET_BASIC_INFO"}` | `"字典类型更新成功，编码：PET_SPECIES"` |
-| DELETE | `/dictTypes/{dictCode}` | 删除字典类型 | N/A | `"字典类型删除成功，编码：PET_SPECIES"` |
+| POST | `/api/health-events` | 创建健康事件 | `{"petId": 1, "eventTypeId": 1, "eventDate": "2023-10-01", "nextDueDate": "2024-04-01", "notes": "狂犬疫苗"}` | `"健康事件添加成功，ID：1"` |
+| GET | `/api/health-events` | 获取所有健康事件 | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, ...}]` |
+| GET | `/api/health-events/page` | 分页获取健康事件 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 50, "size": 10, "current": 1, ...}` |
+| GET | `/api/health-events/{id}` | 根据ID获取健康事件 | N/A | `{"id": 1, "petId": 1, "eventTypeId": 1, ...}` |
+| PUT | `/api/health-events/{id}` | 根据ID更新健康事件 | `{"petId": 1, "eventTypeId": 1, "eventDate": "2023-10-01", "nextDueDate": "2024-05-01", "notes": "更新的疫苗信息"}` | `{"id": 1, "petId": 1, "eventTypeId": 1, ...}` |
+| DELETE | `/api/health-events/{id}` | 根据ID删除健康事件 | N/A | 204 No Content |
+| GET | `/api/health-events/pet/{petId}` | 根据宠物ID获取健康事件 | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, ...}]` |
+| GET | `/api/health-events/upcoming` | 获取即将到期的健康事件（7天内） | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, "nextDueDate": "2023-11-20", ...}]` |
+
+### 4. 体重记录接口
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| POST | `/api/weight-logs` | 添加体重记录 | `{"petId": 1, "weightKg": 5.20, "logDate": "2023-11-13", "notes": "正常体重范围"}` | `"体重记录添加成功，ID：1"` |
+| GET | `/api/weight-logs` | 获取所有体重记录 | N/A | `[{"id": 1, "petId": 1, "weightKg": 5.20, ...}]` |
+| GET | `/api/weight-logs/page` | 分页获取体重记录 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 30, "size": 10, "current": 1, ...}` |
+| GET | `/api/weight-logs/{id}` | 根据ID获取体重记录 | N/A | `{"id": 1, "petId": 1, "weightKg": 5.20, ...}` |
+| PUT | `/api/weight-logs/{id}` | 根据ID更新体重记录 | `{"petId": 1, "weightKg": 5.30, "logDate": "2023-11-13", "notes": "轻微增加"}` | `{"id": 1, "petId": 1, "weightKg": 5.30, ...}` |
+| DELETE | `/api/weight-logs/{id}` | 根据ID删除体重记录 | N/A | 204 No Content |
+| GET | `/api/weight-logs/pet/{petId}` | 根据宠物ID获取体重记录历史 | N/A | `[{"id": 1, "petId": 1, "weightKg": 5.20, ...}]` |
+| GET | `/api/weight-logs/pet/{petId}/latest` | 获取宠物最新体重记录 | N/A | `{"id": 1, "petId": 1, "weightKg": 5.20, "logDate": "2023-11-13", ...}` |
+
+### 5. 字典项接口
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| POST | `/api/dictItems` | 添加字典项 | `{"dictCode": "pet_species", "itemValue": "cat", "itemLabel": "猫", "sortOrder": 1}` | `"字典项添加成功，ID：1"` |
+| GET | `/api/dictItems` | 获取所有字典项 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
+| GET | `/api/dictItems/page` | 分页获取字典项 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 20, "size": 10, "current": 1, ...}` |
+| GET | `/api/dictItems/{id}` | 根据ID获取字典项 | N/A | `{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}` |
+| PUT | `/api/dictItems/{id}` | 根据ID更新字典项 | `{"dictCode": "pet_species", "itemValue": "cat", "itemLabel": "猫咪", "sortOrder": 1}` | `"字典项更新成功，ID：1"` |
+| DELETE | `/api/dictItems/{id}` | 根据ID删除字典项 | N/A | `"字典项删除成功，ID：1"` |
+| GET | `/api/dictItems/code/{dictCode}` | 根据字典编码获取字典项列表 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
+| GET | `/api/dictItems/lookup` | 查找接口(用于下拉选择器) | N/A (查询参数: dictCode=PET_SPECIES) | `[{"id": 1, "label": "猫", ...}]` |
+
+### 6. 字典类型接口
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| POST | `/api/dictTypes` | 添加字典类型 | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "notes": "用于定义宠物的物种分类", "parentCode": "PET_BASIC_INFO"}` | `"字典类型添加成功，编码：PET_SPECIES"` |
+| GET | `/api/dictTypes` | 获取所有字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
+| GET | `/api/dictTypes/page` | 分页获取字典类型 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 15, "size": 10, "current": 1, ...}` |
+| GET | `/api/dictTypes/{dictCode}` | 根据字典编码获取字典类型 | N/A | `{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}` |
+| GET | `/api/dictTypes/parent/{parentCode}` | 根据父级编码获取字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
+| PUT | `/api/dictTypes/{dictCode}` | 更新字典类型 | `{"dictName": "宠物物种分类", "notes": "更新的备注信息", "parentCode": "PET_BASIC_INFO"}` | `"字典类型更新成功，编码：PET_SPECIES"` |
+| DELETE | `/api/dictTypes/{dictCode}` | 删除字典类型 | N/A | `"字典类型删除成功，编码：PET_SPECIES"` |
 
 ## 🔮 未来功能规划
 

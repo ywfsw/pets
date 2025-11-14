@@ -23,7 +23,7 @@ import java.util.List;
  * @since 2025-11-13
  */
 @RestController
-@RequestMapping("/dictItems")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class DictItemsController {
 
@@ -33,7 +33,7 @@ public class DictItemsController {
     /**
      * 添加字典项
      */
-    @PostMapping
+    @PostMapping("/dictItems")
     public ResponseEntity<String> addDictItem(@RequestBody DictItems dictItem) {
         // 设置创建时间，使用OffsetDateTime
         dictItem.setCreatedAt(OffsetDateTime.now());
@@ -48,7 +48,7 @@ public class DictItemsController {
     /**
      * 获取字典项列表
      */
-    @GetMapping
+    @GetMapping("/dictItems")
     public ResponseEntity<List<DictItems>> listDictItems() {
         List<DictItems> dictItems = dictItemsService.list();
         return ResponseEntity.ok(dictItems);
@@ -57,7 +57,7 @@ public class DictItemsController {
     /**
      * 分页查询字典项
      */
-    @GetMapping("/page")
+    @GetMapping("/dictItems/page")
     public ResponseEntity<Page<DictItems>> pageDictItems(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -69,7 +69,7 @@ public class DictItemsController {
     /**
      * 根据ID获取字典项
      */
-    @GetMapping("/{id}")
+    @GetMapping("/dictItems/{id}")
     public ResponseEntity<DictItems> getDictItemById(@PathVariable Long id) {
         DictItems dictItem = dictItemsService.getById(id);
         if (dictItem != null) {
@@ -82,7 +82,7 @@ public class DictItemsController {
     /**
      * 根据ID更新字典项
      */
-    @PutMapping("/{id}")
+    @PutMapping("/dictItems/{id}")
     public ResponseEntity<String> updateDictItem(@PathVariable Long id, @RequestBody DictItems dictItem) {
         // 确保ID一致
         dictItem.setId(id);
@@ -104,7 +104,7 @@ public class DictItemsController {
     /**
      * 根据ID删除字典项
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/dictItems/{id}")
     public ResponseEntity<String> deleteDictItem(@PathVariable Long id) {
         boolean deleted = dictItemsService.removeById(id);
         if (deleted) {
@@ -117,7 +117,7 @@ public class DictItemsController {
     /**
      * 根据字典编码获取字典项列表
      */
-    @GetMapping("/code/{dictCode}")
+    @GetMapping("/dictItems/code/{dictCode}")
     public ResponseEntity<List<DictItems>> getDictItemsByCode(@PathVariable String dictCode) {
         QueryWrapper<DictItems> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("dict_code", dictCode);
@@ -132,7 +132,7 @@ public class DictItemsController {
      * @param dictCode 必须传入的字典类型编码 (e.g., "PET_SPECIES")
      * @return 字典项列表 (非分页)
      */
-    @GetMapping("/lookup")
+    @GetMapping("/dictItems/lookup")
     public ResponseEntity<List<DictItemLookupDTO>> getDictItemLookup(
             @RequestParam("dictCode") String dictCode) {
 

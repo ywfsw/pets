@@ -22,7 +22,7 @@ import java.util.List;
  * @since 2025-11-13
  */
 @RestController
-@RequestMapping("/health-events")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class HealthEventsController {
 
@@ -32,7 +32,7 @@ public class HealthEventsController {
     /**
      * 添加健康事件
      */
-    @PostMapping
+    @PostMapping("/health-events")
     public ResponseEntity<String> addHealthEvent(@RequestBody HealthEvents event) {
         // 设置创建时间
         event.setCreatedAt(OffsetDateTime.now());
@@ -47,7 +47,7 @@ public class HealthEventsController {
     /**
      * 获取健康事件列表
      */
-    @GetMapping
+    @GetMapping("/health-events")
     public ResponseEntity<List<HealthEvents>> listHealthEvents() {
         List<HealthEvents> events = healthEventsService.list();
         return ResponseEntity.ok(events);
@@ -56,7 +56,7 @@ public class HealthEventsController {
     /**
      * 分页查询健康事件
      */
-    @GetMapping("/page")
+    @GetMapping("/health-events/page")
     public ResponseEntity<Page<HealthEvents>> pageHealthEvents(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -68,7 +68,7 @@ public class HealthEventsController {
     /**
      * 根据ID获取健康事件
      */
-    @GetMapping("/{id}")
+    @GetMapping("/health-events/{id}")
     public ResponseEntity<HealthEvents> getHealthEventById(@PathVariable Long id) {
         HealthEvents event = healthEventsService.getById(id);
         if (event != null) {
@@ -81,7 +81,7 @@ public class HealthEventsController {
     /**
      * 根据ID更新健康事件
      */
-    @PutMapping("/{id}")
+    @PutMapping("/health-events/{id}")
     public ResponseEntity<HealthEvents> updateHealthEvent(@PathVariable Long id, @RequestBody HealthEvents event) {
         // 确保ID一致
         event.setId(id);
@@ -103,7 +103,7 @@ public class HealthEventsController {
     /**
      * 根据ID删除健康事件
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/health-events/{id}")
     public ResponseEntity<Void> deleteHealthEvent(@PathVariable Long id) {
         boolean deleted = healthEventsService.removeById(id);
         if (deleted) {
@@ -116,7 +116,7 @@ public class HealthEventsController {
     /**
      * 根据宠物ID获取健康事件
      */
-    @GetMapping("/pet/{petId}")
+    @GetMapping("/health-events/pet/{petId}")
     public ResponseEntity<List<HealthEvents>> getHealthEventsByPetId(@PathVariable Long petId) {
         QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("pet_id", petId);
@@ -128,7 +128,7 @@ public class HealthEventsController {
     /**
      * 获取即将到期的健康事件（7天内）
      */
-    @GetMapping("/upcoming")
+    @GetMapping("/health-events/upcoming")
     public ResponseEntity<List<HealthEvents>> getUpcomingHealthEvents() {
         QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
         queryWrapper.isNotNull("next_due_date");
