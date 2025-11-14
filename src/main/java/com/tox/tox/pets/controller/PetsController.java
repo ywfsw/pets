@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -86,7 +87,10 @@ public class PetsController {
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize);
-
+        //根据likeCount排序
+        page.setRecords(page.getRecords().stream()
+                .sorted((p1, p2) -> Long.compare(p2.getLikeCount(), p1.getLikeCount()))
+                .collect(Collectors.toList()));
         // (❗) IPage<...> 序列化后的 JSON 结构
         // (完美匹配你 API 文档里的 "records", "total", "size", "current")
         return ResponseEntity.ok(page);
