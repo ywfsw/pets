@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 健康检查 / 保活接口
  */
 @RestController
-@CrossOrigin(origins = "*")
 public class HealthController {
 
     @GetMapping("/ping")

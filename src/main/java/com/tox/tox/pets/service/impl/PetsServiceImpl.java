@@ -16,6 +16,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
+import org.springframework.data.redis.core.ZSetOperations;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 /**
  * <p>
  *  服务实现类
@@ -72,5 +81,46 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         dtoPage.setRecords(dtos);
 
         return dtoPage;
+    }
+
+    @Override
+    public List<PetLeaderboardDTO> getLeaderboard(int topN) {
+        // 1. (Redis) 从 LikingService 获取排行榜 (ID 和分数)
+        List<ZSetOperations.TypedTuple<String>> leaderboardFromRedis = likingService.getLeaderboard(topN);
+
+        if (leaderboardFromRedis.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. (DB) 提取 Pet ID, 准备数据库批量查询
+        List<Long> petIds = leaderboardFromRedis.stream()
+                .map(tuple -> Long.parseLong(tuple.getValue()))
+                .collect(Collectors.toList());
+
+        // 3. (DB) 批量查询 Pet 的详细信息
+        Map<Long, Pets> petsMap = this.listByIds(petIds).stream()
+                .collect(Collectors.toMap(Pets::getId, pet -> pet));
+
+        // 4. (Java) 组装成 DTO
+        return IntStream.range(0, leaderboardFromRedis.size())
+                .mapToObj(i -> {
+                    ZSetOperations.TypedTuple<String> tuple = leaderboardFromRedis.get(i);
+                    Long petId = Long.parseLong(tuple.getValue());
+                    Pets pet = petsMap.get(petId);
+
+                    // (健壮性) 如果 Redis 中的 petId 在数据库中找不到了, 跳过
+                    if (pet == null) {
+                        return null;
+                    }
+
+                    return new PetLeaderboardDTO(
+                            i + 1, // Rank
+                            petId,
+                            pet.getName(),
+                            tuple.getScore().longValue() // Like Count
+                    );
+                })
+                .filter(dto -> dto != null) // 过滤掉没找到的
+                .collect(Collectors.toList());
     }
 }

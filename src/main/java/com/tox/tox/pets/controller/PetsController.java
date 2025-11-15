@@ -2,24 +2,15 @@ package com.tox.tox.pets.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.tox.tox.pets.model.DictItems;
-import com.tox.tox.pets.model.HealthEvents;
-import com.tox.tox.pets.model.Pets;
-import com.tox.tox.pets.model.WeightLog;
-import com.tox.tox.pets.model.dto.HealthEventsDTO;
-import com.tox.tox.pets.model.dto.PetDetailDTO;
-import com.tox.tox.pets.model.dto.PetPageDTO;
-import com.tox.tox.pets.service.IDictItemsService;
-import com.tox.tox.pets.service.IHealthEventsService;
-import com.tox.tox.pets.service.IPetsService;
-import com.tox.tox.pets.service.IWeightLogService;
+import com.tox.tox.pets.model.*;
+import com.tox.tox.pets.model.dto.*;
+import com.tox.tox.pets.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,31 +26,43 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
 public class PetsController {
 
     @Autowired
     private IPetsService petsService;
-    
+
     @Autowired
     private IDictItemsService dictItemsService;
-    
+
     @Autowired
     private IWeightLogService weightLogService;
-    
+
     @Autowired
     private IHealthEventsService healthEventsService;
+
+    @Autowired
+    private IPetGalleryService petGalleryService;
 
     /**
      * 添加宠物
      */
     @PostMapping("/pets")
-    public ResponseEntity<String> addPet(@RequestBody Pets pet) {
+    @Transactional
+    public ResponseEntity<String> addPet(@RequestBody PetRequestDTO petRequest) {
         // 设置创建时间
-        pet.setCreatedAt(OffsetDateTime.now());
-        boolean saved = petsService.save(pet);
+        petRequest.setCreatedAt(OffsetDateTime.now());
+        boolean saved = petsService.save(petRequest);
         if (saved) {
-            return ResponseEntity.status(HttpStatus.CREATED).body("宠物添加成功，ID：" + pet.getId());
+            // 如果有头像URL，则存入相册表
+            if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
+                PetGallery gallery = new PetGallery();
+                gallery.setPetId(petRequest.getId());
+                gallery.setImageUrl(petRequest.getAvatarUrl());
+                gallery.setCaption("Pet Avatar");
+                gallery.setCreatedAt(OffsetDateTime.now());
+                petGalleryService.save(gallery);
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body("宠物添加成功，ID：" + petRequest.getId());
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("宠物添加失败");
         }
@@ -97,6 +100,18 @@ public class PetsController {
     }
 
     /**
+     * (❗ 新增) GET /api/pets/leaderboard
+     * 获取点赞排行榜
+     */
+    @GetMapping("/pets/leaderboard")
+    public ResponseEntity<List<PetLeaderboardDTO>> getLeaderboard(
+            @RequestParam(defaultValue = "10") int topN
+    ) {
+        List<PetLeaderboardDTO> leaderboard = petsService.getLeaderboard(topN);
+        return ResponseEntity.ok(leaderboard);
+    }
+
+    /**
      * 根据ID获取宠物信息
      */
     @GetMapping("/pets/{id}")
@@ -119,7 +134,7 @@ public class PetsController {
         if (pet == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        
+
         // 2. 创建详细信息DTO并设置基本信息
         PetDetailDTO detailDTO = new PetDetailDTO();
         detailDTO.setId(pet.getId());
@@ -128,7 +143,7 @@ public class PetsController {
         detailDTO.setName(pet.getName());
         detailDTO.setBirthday(pet.getBirthday());
         detailDTO.setCreatedAt(pet.getCreatedAt());
-        
+
         // 3. 查询物种中文标签
         if (pet.getSpeciesId() != null) {
             DictItems speciesDict = dictItemsService.getById(pet.getSpeciesId());
@@ -136,7 +151,7 @@ public class PetsController {
                 detailDTO.setSpeciesLabel(speciesDict.getItemLabel());
             }
         }
-        
+
         // 4. 查询品种中文标签
         if (pet.getBreedId() != null) {
             DictItems breedDict = dictItemsService.getById(pet.getBreedId());
@@ -144,25 +159,25 @@ public class PetsController {
                 detailDTO.setBreedLabel(breedDict.getItemLabel());
             }
         }
-        
+
         // 5. 查询体重记录
         QueryWrapper<WeightLog> weightQuery = new QueryWrapper<>();
         weightQuery.eq("pet_id", id);
         weightQuery.orderByDesc("log_date");
         List<WeightLog> weightLogs = weightLogService.list(weightQuery);
         detailDTO.setWeightLogs(weightLogs);
-        
+
         // 6. 查询健康事件并添加中文标签
         QueryWrapper<HealthEvents> healthQuery = new QueryWrapper<>();
         healthQuery.eq("pet_id", id);
         healthQuery.orderByDesc("event_date");
         List<HealthEvents> healthEvents = healthEventsService.list(healthQuery);
-        
+
         // 转换为带中文标签的DTO列表
         List<HealthEventsDTO> healthEventsDTOs = new ArrayList<>();
         for (HealthEvents event : healthEvents) {
             HealthEventsDTO eventDTO = new HealthEventsDTO();
-            
+
             // 设置基本属性
             eventDTO.setId(event.getId());
             eventDTO.setPetId(event.getPetId());
@@ -171,7 +186,7 @@ public class PetsController {
             eventDTO.setNextDueDate(event.getNextDueDate());
             eventDTO.setNotes(event.getNotes());
             eventDTO.setCreatedAt(event.getCreatedAt());
-            
+
             // 查询并设置事件类型中文标签
             if (event.getEventTypeId() != null) {
                 DictItems eventTypeDict = dictItemsService.getById(event.getEventTypeId());
@@ -179,12 +194,12 @@ public class PetsController {
                     eventDTO.setEventTypeLabel(eventTypeDict.getItemLabel());
                 }
             }
-            
+
             healthEventsDTOs.add(eventDTO);
         }
-        
+
         detailDTO.setHealthEvents(healthEventsDTOs);
-        
+
         return ResponseEntity.ok(detailDTO);
     }
 
@@ -192,16 +207,26 @@ public class PetsController {
      * 根据ID更新宠物信息
      */
     @PutMapping("/pets/{id}")
-    public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody Pets pet) {
+    @Transactional
+    public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
         // 确保ID一致
-        pet.setId(id);
+        petRequest.setId(id);
         // 不更新创建时间
         Pets existingPet = petsService.getById(id);
         if (existingPet != null) {
-            pet.setCreatedAt(existingPet.getCreatedAt());
-            boolean updated = petsService.updateById(pet);
+            petRequest.setCreatedAt(existingPet.getCreatedAt());
+            boolean updated = petsService.updateById(petRequest);
             if (updated) {
-                return ResponseEntity.ok(pet);
+                // 如果有头像URL，则存入相册表
+                if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
+                    PetGallery gallery = new PetGallery();
+                    gallery.setPetId(id);
+                    gallery.setImageUrl(petRequest.getAvatarUrl());
+                    gallery.setCaption("Pet Avatar");
+                    gallery.setCreatedAt(OffsetDateTime.now());
+                    petGalleryService.save(gallery);
+                }
+                return ResponseEntity.ok(petRequest);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }

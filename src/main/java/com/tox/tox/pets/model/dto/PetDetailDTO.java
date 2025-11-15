@@ -66,4 +66,11 @@ public class PetDetailDTO {
      * 健康事件列表（带中文标签）
      */
     private List<HealthEventsDTO> healthEvents;
+
+
+
+    private String profileImageUrl;
+
+
+    private String profileImagePublicId;
 }

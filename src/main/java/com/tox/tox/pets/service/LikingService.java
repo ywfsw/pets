@@ -3,12 +3,14 @@ package com.tox.tox.pets.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -21,6 +23,9 @@ public class LikingService {
     // (❗) 推荐使用 StringRedisTemplate
     // Key 和 Value 都是 String, 非常适合点赞计数
     private final StringRedisTemplate redisTemplate;
+
+    // (❗ 新增) 排行榜的 Key
+    private static final String PETS_LEADERBOARD_KEY = "pets:leaderboard";
 
     // (❗) 构造函数注入 (Spring 推荐)
     @Autowired
@@ -54,7 +59,12 @@ public class LikingService {
         String likeCountKey = "pet:like:count:" + petId;
 
         // (INCR) 原子增1
-        redisTemplate.opsForValue().increment(likeCountKey);
+        Long newCount = redisTemplate.opsForValue().increment(likeCountKey);
+
+        // 3. (❗ 新增) 更新排行榜 (ZADD)
+        if (newCount != null) {
+            redisTemplate.opsForZSet().add(PETS_LEADERBOARD_KEY, petId.toString(), newCount);
+        }
     }
 
     /**
@@ -124,5 +134,23 @@ public class LikingService {
         }
 
         return countsMap;
+    }
+
+    /**
+     * (❗ 新增) 获取点赞排行榜
+     *
+     * @param topN 需要的名次数
+     * @return 排行榜 (Pet ID 和分数)
+     */
+    public List<ZSetOperations.TypedTuple<String>> getLeaderboard(int topN) {
+        // (ZREVRANGEBYSCORE) 从高到低查询
+        Set<ZSetOperations.TypedTuple<String>> range = redisTemplate.opsForZSet()
+                .reverseRangeWithScores(PETS_LEADERBOARD_KEY, 0, topN - 1);
+
+        if (range == null) {
+            return Collections.emptyList();
+        }
+
+        return range.stream().collect(Collectors.toList());
     }
 }

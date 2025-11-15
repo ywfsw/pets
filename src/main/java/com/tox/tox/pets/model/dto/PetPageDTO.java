@@ -20,10 +20,9 @@ public class PetPageDTO {
     private Long speciesId;
     private Long breedId;
     private LocalDate birthday;
-    // (你可能还有其他字段...)
-    
-    // --- (❗ 关键) 额外聚合的数据 ---
     private long likeCount;
+    private String profileImageUrl;
+    private String profileImagePublicId;
 
     /**
      * (推荐) 转换构造函数
@@ -35,5 +34,7 @@ public class PetPageDTO {
         this.speciesId = pet.getSpeciesId();
         this.breedId = pet.getBreedId();
         this.birthday = pet.getBirthday();
+        this.profileImageUrl = pet.getProfileImageUrl();
+        this.profileImagePublicId = pet.getProfileImagePublicId();
     }
 }

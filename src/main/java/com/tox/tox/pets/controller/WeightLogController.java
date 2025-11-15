@@ -23,7 +23,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/weight-logs")
-@CrossOrigin(origins = "*")
 public class WeightLogController {
 
     @Autowired

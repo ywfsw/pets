@@ -60,4 +60,10 @@ public class Pets implements Serializable {
      * 记录创建时间
      */
     private OffsetDateTime createdAt;
+
+
+    private String profileImageUrl;
+
+
+    private String profileImagePublicId;
 }

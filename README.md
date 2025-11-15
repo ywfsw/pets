@@ -51,27 +51,34 @@ mvn spring-boot:run
 |------|------|------|---------------|------------------|
 | GET | `/ping` | 健康检查接口 | N/A | `"pong"` |
 
-### 1. 点赞功能接口
+### 1. 媒体接口 (Media API)
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| GET | `/api/media/upload-signature` | 获取 Cloudinary 安全上传签名 | N/A | `{"signature": "...", "timestamp": "...", "api_key": "...", "cloud_name": "..."}` |
+
+### 2. 点赞功能接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
 | POST | `/api/pets/{petId}/like` | 点赞一个宠物 | N/A | `{"success": true, "message": "点赞成功"}` |
 | GET | `/api/pets/{petId}/likes/count` | 获取宠物的总点赞数 | N/A | `{"petId": 1, "count": 10}` |
+| GET | `/api/pets/leaderboard` | 获取宠物点赞排行榜 | N/A (查询参数: topN=10) | `[{"rank": 1, "petId": 12, "name": "豆豆", "likeCount": 158}, ...]` |
 
-### 2. 宠物管理接口
+### 3. 宠物管理接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
-| POST | `/api/pets` | 创建新宠物 | `{"speciesId": 1, "breedId": 2, "name": "咪咪", "birthday": "2020-01-01"}` | `"宠物添加成功，ID：1"` |
+| POST | `/api/pets` | 创建新宠物 (支持上传头像) | `{"speciesId": 1, "breedId": 2, "name": "咪咪", "birthday": "2020-01-01", "avatarUrl": "https://example.com/avatar.jpg"}` | `"宠物添加成功，ID：1"` |
 | GET | `/api/pets` | 获取所有宠物列表 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
 | GET | `/api/pets/page` | 分页获取宠物列表 | N/A (查询参数: pageNum=1&pageSize=10) | `{"records": [...], "total": 100, "size": 10, "current": 1, ...}` |
 | GET | `/api/pets/{id}` | 根据ID获取宠物基本信息 | N/A | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
 | GET | `/api/pets/detail/{id}` | 根据ID获取宠物详细信息(包含体重和健康事件) | N/A | `{"id": 1, "speciesLabel": "猫", "breedLabel": "英短", "name": "咪咪", "weightLogs": [...], "healthEvents": [...]}` |
-| PUT | `/api/pets/{id}` | 根据ID更新宠物信息 | `{"speciesId": 1, "breedId": 3, "name": "咪咪", "birthday": "2020-01-01"}` | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
+| PUT | `/api/pets/{id}` | 根据ID更新宠物信息 (支持更新头像) | `{"speciesId": 1, "breedId": 3, "name": "咪咪", "birthday": "2020-01-01", "avatarUrl": "https://example.com/new_avatar.jpg"}` | `{"id": 1, "speciesId": 1, "name": "咪咪", ...}` |
 | DELETE | `/api/pets/{id}` | 根据ID删除宠物 | N/A | 204 No Content |
 | GET | `/api/pets/species/{species}` | 根据物种查询宠物 | N/A | `[{"id": 1, "speciesId": 1, "name": "咪咪", ...}]` |
 
-### 3. 健康事件接口
+### 4. 健康事件接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
@@ -84,7 +91,7 @@ mvn spring-boot:run
 | GET | `/api/health-events/pet/{petId}` | 根据宠物ID获取健康事件 | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, ...}]` |
 | GET | `/api/health-events/upcoming` | 获取即将到期的健康事件（7天内） | N/A | `[{"id": 1, "petId": 1, "eventTypeId": 1, "nextDueDate": "2023-11-20", ...}]` |
 
-### 4. 体重记录接口
+### 5. 体重记录接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
@@ -97,7 +104,7 @@ mvn spring-boot:run
 | GET | `/api/weight-logs/pet/{petId}` | 根据宠物ID获取体重记录历史 | N/A | `[{"id": 1, "petId": 1, "weightKg": 5.20, ...}]` |
 | GET | `/api/weight-logs/pet/{petId}/latest` | 获取宠物最新体重记录 | N/A | `{"id": 1, "petId": 1, "weightKg": 5.20, "logDate": "2023-11-13", ...}` |
 
-### 5. 字典项接口
+### 6. 字典项接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
@@ -110,7 +117,7 @@ mvn spring-boot:run
 | GET | `/api/dictItems/code/{dictCode}` | 根据字典编码获取字典项列表 | N/A | `[{"id": 1, "dictCode": "pet_species", "itemLabel": "猫", ...}]` |
 | GET | `/api/dictItems/lookup` | 查找接口(用于下拉选择器) | N/A (查询参数: dictCode=PET_SPECIES) | `[{"id": 1, "label": "猫", ...}]` |
 
-### 6. 字典类型接口
+### 7. 字典类型接口
 
 | 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
 |------|------|------|---------------|------------------|
@@ -121,6 +128,17 @@ mvn spring-boot:run
 | GET | `/api/dictTypes/parent/{parentCode}` | 根据父级编码获取字典类型列表 | N/A | `[{"dictCode": "PET_SPECIES", "dictName": "宠物物种", "parentCode": "PET_BASIC_INFO", ...}]` |
 | PUT | `/api/dictTypes/{dictCode}` | 更新字典类型 | `{"dictName": "宠物物种分类", "notes": "更新的备注信息", "parentCode": "PET_BASIC_INFO"}` | `"字典类型更新成功，编码：PET_SPECIES"` |
 | DELETE | `/api/dictTypes/{dictCode}` | 删除字典类型 | N/A | `"字典类型删除成功，编码：PET_SPECIES"` |
+
+### 8. 宠物相册接口 (Pet Gallery API)
+
+| 方法 | 路径 | 描述 | 请求体 (JSON) | 成功响应 (200 OK) |
+|------|------|------|---------------|------------------|
+| POST | `/api/petGallery` | 添加宠物相册图片 | `{"petId": 1, "imageUrl": "https://example.com/pet_photo.jpg", "caption": "宠物玩耍照片"}` | `"相册图片添加成功，ID：1"` |
+| GET | `/api/petGallery` | 获取所有宠物相册图片 | N/A | `[{"id": 1, "petId": 1, "imageUrl": "https://example.com/pet_photo.jpg", ...}]` |
+| GET | `/api/petGallery/{id}` | 根据ID获取宠物相册图片 | N/A | `{"id": 1, "petId": 1, "imageUrl": "https://example.com/pet_photo.jpg", ...}` |
+| PUT | `/api/petGallery/{id}` | 根据ID更新宠物相册图片 | `{"petId": 1, "imageUrl": "https://example.com/updated_photo.jpg", "caption": "更新后的照片描述"}` | `"相册图片更新成功，ID：1"` |
+| DELETE | `/api/petGallery/{id}` | 根据ID删除宠物相册图片 | N/A | `"相册图片删除成功，ID：1"` |
+| GET | `/api/petGallery/pet/{petId}` | 根据宠物ID获取相册列表 | N/A | `[{"id": 1, "petId": 1, "imageUrl": "https://example.com/pet_photo.jpg", ...}]` |
 
 ## 🔮 未来功能规划
 
