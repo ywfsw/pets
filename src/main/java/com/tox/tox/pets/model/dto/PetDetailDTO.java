@@ -67,10 +67,7 @@ public class PetDetailDTO {
      */
     private List<HealthEventsDTO> healthEvents;
 
+        private String avatarUrl;
 
-
-    private String profileImageUrl;
-
-
-    private String profileImagePublicId;
+        private String avatarId;
 }

@@ -143,6 +143,8 @@ public class PetsController {
         detailDTO.setName(pet.getName());
         detailDTO.setBirthday(pet.getBirthday());
         detailDTO.setCreatedAt(pet.getCreatedAt());
+        detailDTO.setAvatarUrl(pet.getProfileImageUrl());
+        detailDTO.setAvatarId(pet.getProfileImagePublicId());
 
         // 3. 查询物种中文标签
         if (pet.getSpeciesId() != null) {
