@@ -9,8 +9,11 @@ import com.tox.tox.pets.service.IPetsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tox.tox.pets.service.LikingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      * (❗ 核心实现)
      */
     @Override
+    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
     public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize) {
 
         // 1. (DB) 创建 MP 分页对象
@@ -122,5 +126,23 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
                 })
                 .filter(dto -> dto != null) // 过滤掉没找到的
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @CacheEvict(value = "pets_page", allEntries = true)
+    public boolean save(Pets entity) {
+        return super.save(entity);
+    }
+
+    @Override
+    @CacheEvict(value = "pets_page", allEntries = true)
+    public boolean updateById(Pets entity) {
+        return super.updateById(entity);
+    }
+
+    @Override
+    @CacheEvict(value = "pets_page", allEntries = true)
+    public boolean removeById(Serializable id) {
+        return super.removeById(id);
     }
 }

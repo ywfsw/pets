@@ -1,10 +1,17 @@
 package com.tox.tox.pets.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictTypes;
 import com.tox.tox.pets.mapper.DictTypesMapper;
 import com.tox.tox.pets.service.IDictTypesService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>
@@ -17,4 +24,39 @@ import org.springframework.stereotype.Service;
 @Service
 public class DictTypesServiceImpl extends ServiceImpl<DictTypesMapper, DictTypes> implements IDictTypesService {
 
+    @Override
+    @Cacheable(value = "dict_types", key = "#page.current + '-' + #page.size")
+    public <E extends IPage<DictTypes>> E page(E page) {
+        return super.page(page);
+    }
+
+    @Override
+    @Cacheable(value = "dict_types", key = "'list'")
+    public List<DictTypes> list() {
+        return super.list();
+    }
+
+    @Override
+    @Cacheable(value = "dict_types", key = "#id")
+    public DictTypes getById(Serializable id) {
+        return super.getById(id);
+    }
+
+    @Override
+    @CacheEvict(value = "dict_types", allEntries = true)
+    public boolean save(DictTypes entity) {
+        return super.save(entity);
+    }
+
+    @Override
+    @CacheEvict(value = "dict_types", allEntries = true)
+    public boolean updateById(DictTypes entity) {
+        return super.updateById(entity);
+    }
+
+    @Override
+    @CacheEvict(value = "dict_types", allEntries = true)
+    public boolean removeById(Serializable id) {
+        return super.removeById(id);
+    }
 }
