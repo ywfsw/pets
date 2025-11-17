@@ -22,7 +22,7 @@ import java.util.List;
  * @since 2025-11-13
  */
 @RestController
-@RequestMapping("/weight-logs")
+@RequestMapping("/api/weight-logs")
 public class WeightLogController {
 
     @Autowired
