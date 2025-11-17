@@ -43,10 +43,22 @@ public class PetGallery implements Serializable {
     private String imageUrl;
 
     /**
-     * 图片说明/标题
+     * Cloudinary 的 Public ID
      */
-    @TableField("caption")
-    private String caption;
+    @TableField("public_id")
+    private String publicId;
+
+    /**
+     * 图片描述或备注信息
+     */
+    @TableField("description")
+    private String description;
+
+    /**
+     * 图片在相册中的显示顺序
+     */
+    @TableField("sort_order")
+    private Integer sortOrder;
 
     /**
      * 创建时间

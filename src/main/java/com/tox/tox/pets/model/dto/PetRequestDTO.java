@@ -7,5 +7,4 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PetRequestDTO extends Pets {
-    private String avatarUrl;
 }

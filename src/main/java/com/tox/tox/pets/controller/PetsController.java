@@ -54,11 +54,12 @@ public class PetsController {
         boolean saved = petsService.save(petRequest);
         if (saved) {
             // 如果有头像URL，则存入相册表
-            if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
+            if (petRequest.getProfileImageUrl() != null && !petRequest.getProfileImageUrl().isEmpty()) {
                 PetGallery gallery = new PetGallery();
                 gallery.setPetId(petRequest.getId());
-                gallery.setImageUrl(petRequest.getAvatarUrl());
-                gallery.setCaption("Pet Avatar");
+                gallery.setImageUrl(petRequest.getProfileImageUrl());
+                gallery.setPublicId(petRequest.getProfileImagePublicId());
+                gallery.setDescription("Pet Avatar");
                 gallery.setCreatedAt(OffsetDateTime.now());
                 petGalleryService.save(gallery);
             }
@@ -154,61 +155,89 @@ public class PetsController {
 
          */
 
-        @PutMapping("/pets/{id}")
+                @PutMapping("/pets/{id}")
 
-        @Transactional
+                @Transactional
 
-        public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
+                public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
 
-            // 确保ID一致
+                    // 确保ID一致
 
-            petRequest.setId(id);
+                    petRequest.setId(id);
 
-            // 不更新创建时间
+                    // 不更新创建时间
 
-            Pets existingPet = petsService.getById(id);
+                    Pets existingPet = petsService.getById(id);
 
-            if (existingPet != null) {
+                    if (existingPet != null) {
 
-                petRequest.setCreatedAt(existingPet.getCreatedAt());
+                        petRequest.setCreatedAt(existingPet.getCreatedAt());
 
-                boolean updated = petsService.updateById(petRequest);
+            
 
-                if (updated) {
+                        boolean updated = petsService.updateById(petRequest);
 
-                    // 如果有头像URL，则存入相册表
+                        if (updated) {
 
-                    if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
+                            // 检查是否提供了新的、与之前不同的头像URL
 
-                        PetGallery gallery = new PetGallery();
+                            String newProfileImageUrl = petRequest.getProfileImageUrl();
 
-                        gallery.setPetId(id);
+                            String oldProfileImageUrl = existingPet.getProfileImageUrl();
 
-                        gallery.setImageUrl(petRequest.getAvatarUrl());
+                            boolean isNewUrlProvided = newProfileImageUrl != null && !newProfileImageUrl.isEmpty() && !newProfileImageUrl.equals(oldProfileImageUrl);
 
-                        gallery.setCaption("Pet Avatar");
+            
 
-                        gallery.setCreatedAt(OffsetDateTime.now());
+                                            if (isNewUrlProvided) {
 
-                        petGalleryService.save(gallery);
+            
+
+                                                PetGallery gallery = new PetGallery();
+
+            
+
+                                                gallery.setPetId(id);
+
+            
+
+                                                gallery.setImageUrl(newProfileImageUrl);
+
+            
+
+                                                gallery.setPublicId(petRequest.getProfileImagePublicId());
+
+            
+
+                                                gallery.setDescription("Pet Avatar");
+
+            
+
+                                                gallery.setCreatedAt(OffsetDateTime.now());
+
+            
+
+                                                petGalleryService.save(gallery);
+
+            
+
+                                            }
+
+                            return ResponseEntity.ok(petRequest);
+
+                        } else {
+
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
+                        }
+
+                    } else {
+
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
                     }
 
-                    return ResponseEntity.ok(petRequest);
-
-                } else {
-
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-
                 }
-
-            } else {
-
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-
-            }
-
-        }
 
     
 
