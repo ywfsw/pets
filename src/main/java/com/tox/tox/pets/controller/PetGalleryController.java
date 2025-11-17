@@ -100,9 +100,7 @@ public class PetGalleryController {
      */
     @GetMapping("/petGallery/pet/{petId}")
     public ResponseEntity<List<PetGallery>> getPetGalleryByPetId(@PathVariable Long petId) {
-        QueryWrapper<PetGallery> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pet_id", petId);
-        List<PetGallery> list = petGalleryService.list(queryWrapper);
+        List<PetGallery> list = petGalleryService.listByPetId(petId);
         return ResponseEntity.ok(list);
     }
 }

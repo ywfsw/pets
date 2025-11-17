@@ -81,9 +81,7 @@ public class DictTypesController {
      */
     @GetMapping("/dictTypes/parent/{parentCode}")
     public ResponseEntity<List<DictTypes>> getDictTypesByParentCode(@PathVariable String parentCode) {
-        QueryWrapper<DictTypes> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("parent_code", parentCode);
-        List<DictTypes> dictTypes = dictTypesService.list(queryWrapper);
+        List<DictTypes> dictTypes = dictTypesService.listByParentCode(parentCode);
         return ResponseEntity.ok(dictTypes);
     }
 

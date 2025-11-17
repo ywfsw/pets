@@ -3,6 +3,8 @@ package com.tox.tox.pets.service;
 import com.tox.tox.pets.model.HealthEvents;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * 宠物健康事件表 (核心提醒功能) 服务类
@@ -13,4 +15,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IHealthEventsService extends IService<HealthEvents> {
 
+    List<HealthEvents> listByPetId(Long petId);
+
+    List<HealthEvents> listUpcoming();
 }

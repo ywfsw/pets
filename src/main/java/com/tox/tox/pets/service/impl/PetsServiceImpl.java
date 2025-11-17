@@ -1,20 +1,22 @@
 package com.tox.tox.pets.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.tox.tox.pets.model.Pets;
+import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.mapper.PetsMapper;
+import com.tox.tox.pets.model.dto.HealthEventsDTO;
+import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
-import com.tox.tox.pets.service.IPetsService;
+import com.tox.tox.pets.service.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tox.tox.pets.service.LikingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
-import java.awt.print.Pageable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,9 +25,7 @@ import java.util.stream.Collectors;
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
 import org.springframework.data.redis.core.ZSetOperations;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -40,7 +40,15 @@ import java.util.stream.IntStream;
 public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IPetsService {
     @Autowired
     private LikingService likingService;
-    // (❗) 'baseMapper' (PetMapper) 已经由 ServiceImpl<...> 自动注入了
+
+    @Autowired
+    private IDictItemsService dictItemsService;
+
+    @Autowired
+    private IWeightLogService weightLogService;
+
+    @Autowired
+    private IHealthEventsService healthEventsService;
 
     /**
      * (❗ 核心实现)
@@ -88,6 +96,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     }
 
     @Override
+    @Cacheable(value = "pets_leaderboard", key = "#topN")
     public List<PetLeaderboardDTO> getLeaderboard(int topN) {
         // 1. (Redis) 从 LikingService 获取排行榜 (ID 和分数)
         List<ZSetOperations.TypedTuple<String>> leaderboardFromRedis = likingService.getLeaderboard(topN);
@@ -129,19 +138,118 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     }
 
     @Override
-    @CacheEvict(value = "pets_page", allEntries = true)
+    @Cacheable(value = "pets_detail_by_id", key = "#id")
+    public PetDetailDTO getPetDetailById(Long id) {
+        // 1. 查询宠物基本信息
+        Pets pet = this.getById(id);
+        if (pet == null) {
+            return null;
+        }
+
+        // 2. 创建详细信息DTO并设置基本信息
+        PetDetailDTO detailDTO = new PetDetailDTO();
+        detailDTO.setId(pet.getId());
+        detailDTO.setSpeciesId(pet.getSpeciesId());
+        detailDTO.setBreedId(pet.getBreedId());
+        detailDTO.setName(pet.getName());
+        detailDTO.setBirthday(pet.getBirthday());
+        detailDTO.setCreatedAt(pet.getCreatedAt());
+        detailDTO.setAvatarUrl(pet.getProfileImageUrl());
+        detailDTO.setAvatarId(pet.getProfileImagePublicId());
+
+        // 3. 查询物种中文标签
+        if (pet.getSpeciesId() != null) {
+            DictItems speciesDict = dictItemsService.getById(pet.getSpeciesId());
+            if (speciesDict != null) {
+                detailDTO.setSpeciesLabel(speciesDict.getItemLabel());
+            }
+        }
+
+        // 4. 查询品种中文标签
+        if (pet.getBreedId() != null) {
+            DictItems breedDict = dictItemsService.getById(pet.getBreedId());
+            if (breedDict != null) {
+                detailDTO.setBreedLabel(breedDict.getItemLabel());
+            }
+        }
+
+        // 5. 查询体重记录
+        QueryWrapper<WeightLog> weightQuery = new QueryWrapper<>();
+        weightQuery.eq("pet_id", id);
+        weightQuery.orderByDesc("log_date");
+        List<WeightLog> weightLogs = weightLogService.list(weightQuery);
+        detailDTO.setWeightLogs(weightLogs);
+
+        // 6. 查询健康事件并添加中文标签
+        QueryWrapper<HealthEvents> healthQuery = new QueryWrapper<>();
+        healthQuery.eq("pet_id", id);
+        healthQuery.orderByDesc("event_date");
+        List<HealthEvents> healthEvents = healthEventsService.list(healthQuery);
+
+        // 转换为带中文标签的DTO列表
+        List<HealthEventsDTO> healthEventsDTOs = new ArrayList<>();
+        for (HealthEvents event : healthEvents) {
+            HealthEventsDTO eventDTO = new HealthEventsDTO();
+
+            // 设置基本属性
+            eventDTO.setId(event.getId());
+            eventDTO.setPetId(event.getPetId());
+            eventDTO.setEventTypeId(event.getEventTypeId());
+            eventDTO.setEventDate(event.getEventDate());
+            eventDTO.setNextDueDate(event.getNextDueDate());
+            eventDTO.setNotes(event.getNotes());
+            eventDTO.setCreatedAt(event.getCreatedAt());
+
+            // 查询并设置事件类型中文标签
+            if (event.getEventTypeId() != null) {
+                DictItems eventTypeDict = dictItemsService.getById(event.getEventTypeId());
+                if (eventTypeDict != null) {
+                    eventDTO.setEventTypeLabel(eventTypeDict.getItemLabel());
+                }
+            }
+
+            healthEventsDTOs.add(eventDTO);
+        }
+
+        detailDTO.setHealthEvents(healthEventsDTOs);
+
+        return detailDTO;
+    }
+
+    @Override
+    @Cacheable(value = "pets_by_species", key = "#species")
+    public List<Pets> getPetsBySpecies(String species) {
+        QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("species", species);
+        return this.list(queryWrapper);
+    }
+
+    @Override
+    @Cacheable(value = "pets_list")
+    public List<Pets> list() {
+        return super.list();
+    }
+
+    @Override
+    @Cacheable(value = "pets_by_id", key = "#id")
+    public Pets getById(Serializable id) {
+        return super.getById(id);
+    }
+
+    @Override
+    @CacheEvict(value = {"pets_page", "pets_list", "pets_by_id", "pets_leaderboard", "pets_detail_by_id", "pets_by_species"}, allEntries = true)
     public boolean save(Pets entity) {
         return super.save(entity);
     }
 
     @Override
-    @CacheEvict(value = "pets_page", allEntries = true)
+    @CacheEvict(value = {"pets_page", "pets_list", "pets_by_id", "pets_leaderboard", "pets_detail_by_id", "pets_by_species"}, allEntries = true)
     public boolean updateById(Pets entity) {
         return super.updateById(entity);
     }
 
     @Override
-    @CacheEvict(value = "pets_page", allEntries = true)
+    @CacheEvict(value = {"pets_page", "pets_list", "pets_by_id", "pets_leaderboard", "pets_detail_by_id", "pets_by_species"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
     }

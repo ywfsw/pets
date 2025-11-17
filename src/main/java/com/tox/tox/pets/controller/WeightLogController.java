@@ -112,32 +112,48 @@ public class WeightLogController {
         }
     }
 
-    /**
-     * 根据宠物ID获取体重记录历史
-     */
-    @GetMapping("/pet/{petId}")
-    public ResponseEntity<List<WeightLog>> getWeightLogsByPetId(@PathVariable Long petId) {
-        QueryWrapper<WeightLog> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pet_id", petId);
-        queryWrapper.orderByDesc("log_date");
-        List<WeightLog> logs = weightLogService.list(queryWrapper);
-        return ResponseEntity.ok(logs);
+        /**
+
+         * 根据宠物ID获取体重记录历史
+
+         */
+
+        @GetMapping("/pet/{petId}")
+
+        public ResponseEntity<List<WeightLog>> getWeightLogsByPetId(@PathVariable Long petId) {
+
+            List<WeightLog> logs = weightLogService.listByPetId(petId);
+
+            return ResponseEntity.ok(logs);
+
+        }
+
+    
+
+        /**
+
+         * 获取宠物最新体重记录
+
+         */
+
+        @GetMapping("/pet/{petId}/latest")
+
+        public ResponseEntity<WeightLog> getLatestWeightLogByPetId(@PathVariable Long petId) {
+
+            WeightLog log = weightLogService.getLatestByPetId(petId);
+
+            if (log != null) {
+
+                return ResponseEntity.ok(log);
+
+            } else {
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+            }
+
+        }
+
     }
 
-    /**
-     * 获取宠物最新体重记录
-     */
-    @GetMapping("/pet/{petId}/latest")
-    public ResponseEntity<WeightLog> getLatestWeightLogByPetId(@PathVariable Long petId) {
-        QueryWrapper<WeightLog> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pet_id", petId);
-        queryWrapper.orderByDesc("log_date");
-        queryWrapper.last("LIMIT 1");
-        List<WeightLog> logs = weightLogService.list(queryWrapper);
-        if (!logs.isEmpty()) {
-            return ResponseEntity.ok(logs.get(0));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-}
+    

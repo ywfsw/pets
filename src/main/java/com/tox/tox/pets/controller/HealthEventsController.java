@@ -112,28 +112,40 @@ public class HealthEventsController {
         }
     }
 
-    /**
-     * 根据宠物ID获取健康事件
-     */
-    @GetMapping("/health-events/pet/{petId}")
-    public ResponseEntity<List<HealthEvents>> getHealthEventsByPetId(@PathVariable Long petId) {
-        QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("pet_id", petId);
-        queryWrapper.orderByDesc("event_date");
-        List<HealthEvents> events = healthEventsService.list(queryWrapper);
-        return ResponseEntity.ok(events);
+        /**
+
+         * 根据宠物ID获取健康事件
+
+         */
+
+        @GetMapping("/health-events/pet/{petId}")
+
+        public ResponseEntity<List<HealthEvents>> getHealthEventsByPetId(@PathVariable Long petId) {
+
+            List<HealthEvents> events = healthEventsService.listByPetId(petId);
+
+            return ResponseEntity.ok(events);
+
+        }
+
+    
+
+        /**
+
+         * 获取即将到期的健康事件（7天内）
+
+         */
+
+        @GetMapping("/health-events/upcoming")
+
+        public ResponseEntity<List<HealthEvents>> getUpcomingHealthEvents() {
+
+            List<HealthEvents> events = healthEventsService.listUpcoming();
+
+            return ResponseEntity.ok(events);
+
+        }
+
     }
 
-    /**
-     * 获取即将到期的健康事件（7天内）
-     */
-    @GetMapping("/health-events/upcoming")
-    public ResponseEntity<List<HealthEvents>> getUpcomingHealthEvents() {
-        QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
-        queryWrapper.isNotNull("next_due_date");
-        queryWrapper.le("next_due_date", java.time.LocalDate.now().plusDays(7));
-        queryWrapper.orderByAsc("next_due_date");
-        List<HealthEvents> events = healthEventsService.list(queryWrapper);
-        return ResponseEntity.ok(events);
-    }
-}
+    

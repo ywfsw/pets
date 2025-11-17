@@ -124,140 +124,136 @@ public class PetsController {
         }
     }
 
-    /**
-     * 根据ID获取宠物详细信息
-     */
-    @GetMapping("/pets/detail/{id}")
-    public ResponseEntity<PetDetailDTO> getPetDetailById(@PathVariable Long id) {
-        // 1. 查询宠物基本信息
-        Pets pet = petsService.getById(id);
-        if (pet == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        /**
 
-        // 2. 创建详细信息DTO并设置基本信息
-        PetDetailDTO detailDTO = new PetDetailDTO();
-        detailDTO.setId(pet.getId());
-        detailDTO.setSpeciesId(pet.getSpeciesId());
-        detailDTO.setBreedId(pet.getBreedId());
-        detailDTO.setName(pet.getName());
-        detailDTO.setBirthday(pet.getBirthday());
-        detailDTO.setCreatedAt(pet.getCreatedAt());
-        detailDTO.setAvatarUrl(pet.getProfileImageUrl());
-        detailDTO.setAvatarId(pet.getProfileImagePublicId());
+         * 根据ID获取宠物详细信息
 
-        // 3. 查询物种中文标签
-        if (pet.getSpeciesId() != null) {
-            DictItems speciesDict = dictItemsService.getById(pet.getSpeciesId());
-            if (speciesDict != null) {
-                detailDTO.setSpeciesLabel(speciesDict.getItemLabel());
+         */
+
+        @GetMapping("/pets/detail/{id}")
+
+        public ResponseEntity<PetDetailDTO> getPetDetailById(@PathVariable Long id) {
+
+            PetDetailDTO detailDTO = petsService.getPetDetailById(id);
+
+            if (detailDTO == null) {
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
             }
+
+            return ResponseEntity.ok(detailDTO);
+
         }
 
-        // 4. 查询品种中文标签
-        if (pet.getBreedId() != null) {
-            DictItems breedDict = dictItemsService.getById(pet.getBreedId());
-            if (breedDict != null) {
-                detailDTO.setBreedLabel(breedDict.getItemLabel());
-            }
-        }
+    
 
-        // 5. 查询体重记录
-        QueryWrapper<WeightLog> weightQuery = new QueryWrapper<>();
-        weightQuery.eq("pet_id", id);
-        weightQuery.orderByDesc("log_date");
-        List<WeightLog> weightLogs = weightLogService.list(weightQuery);
-        detailDTO.setWeightLogs(weightLogs);
+        /**
 
-        // 6. 查询健康事件并添加中文标签
-        QueryWrapper<HealthEvents> healthQuery = new QueryWrapper<>();
-        healthQuery.eq("pet_id", id);
-        healthQuery.orderByDesc("event_date");
-        List<HealthEvents> healthEvents = healthEventsService.list(healthQuery);
+         * 根据ID更新宠物信息
 
-        // 转换为带中文标签的DTO列表
-        List<HealthEventsDTO> healthEventsDTOs = new ArrayList<>();
-        for (HealthEvents event : healthEvents) {
-            HealthEventsDTO eventDTO = new HealthEventsDTO();
+         */
 
-            // 设置基本属性
-            eventDTO.setId(event.getId());
-            eventDTO.setPetId(event.getPetId());
-            eventDTO.setEventTypeId(event.getEventTypeId());
-            eventDTO.setEventDate(event.getEventDate());
-            eventDTO.setNextDueDate(event.getNextDueDate());
-            eventDTO.setNotes(event.getNotes());
-            eventDTO.setCreatedAt(event.getCreatedAt());
+        @PutMapping("/pets/{id}")
 
-            // 查询并设置事件类型中文标签
-            if (event.getEventTypeId() != null) {
-                DictItems eventTypeDict = dictItemsService.getById(event.getEventTypeId());
-                if (eventTypeDict != null) {
-                    eventDTO.setEventTypeLabel(eventTypeDict.getItemLabel());
+        @Transactional
+
+        public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
+
+            // 确保ID一致
+
+            petRequest.setId(id);
+
+            // 不更新创建时间
+
+            Pets existingPet = petsService.getById(id);
+
+            if (existingPet != null) {
+
+                petRequest.setCreatedAt(existingPet.getCreatedAt());
+
+                boolean updated = petsService.updateById(petRequest);
+
+                if (updated) {
+
+                    // 如果有头像URL，则存入相册表
+
+                    if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
+
+                        PetGallery gallery = new PetGallery();
+
+                        gallery.setPetId(id);
+
+                        gallery.setImageUrl(petRequest.getAvatarUrl());
+
+                        gallery.setCaption("Pet Avatar");
+
+                        gallery.setCreatedAt(OffsetDateTime.now());
+
+                        petGalleryService.save(gallery);
+
+                    }
+
+                    return ResponseEntity.ok(petRequest);
+
+                } else {
+
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
                 }
-            }
 
-            healthEventsDTOs.add(eventDTO);
-        }
-
-        detailDTO.setHealthEvents(healthEventsDTOs);
-
-        return ResponseEntity.ok(detailDTO);
-    }
-
-    /**
-     * 根据ID更新宠物信息
-     */
-    @PutMapping("/pets/{id}")
-    @Transactional
-    public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
-        // 确保ID一致
-        petRequest.setId(id);
-        // 不更新创建时间
-        Pets existingPet = petsService.getById(id);
-        if (existingPet != null) {
-            petRequest.setCreatedAt(existingPet.getCreatedAt());
-            boolean updated = petsService.updateById(petRequest);
-            if (updated) {
-                // 如果有头像URL，则存入相册表
-                if (petRequest.getAvatarUrl() != null && !petRequest.getAvatarUrl().isEmpty()) {
-                    PetGallery gallery = new PetGallery();
-                    gallery.setPetId(id);
-                    gallery.setImageUrl(petRequest.getAvatarUrl());
-                    gallery.setCaption("Pet Avatar");
-                    gallery.setCreatedAt(OffsetDateTime.now());
-                    petGalleryService.save(gallery);
-                }
-                return ResponseEntity.ok(petRequest);
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
             }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
         }
+
+    
+
+        /**
+
+         * 根据ID删除宠物
+
+         */
+
+        @DeleteMapping("/pets/{id}")
+
+        public ResponseEntity<Void> deletePet(@PathVariable Long id) {
+
+            boolean deleted = petsService.removeById(id);
+
+            if (deleted) {
+
+                return ResponseEntity.noContent().build();
+
+            } else {
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+            }
+
+        }
+
+    
+
+        /**
+
+         * 根据物种查询宠物
+
+         */
+
+        @GetMapping("/pets/species/{species}")
+
+        public ResponseEntity<List<Pets>> getPetsBySpecies(@PathVariable String species) {
+
+            List<Pets> pets = petsService.getPetsBySpecies(species);
+
+            return ResponseEntity.ok(pets);
+
+        }
+
     }
 
-    /**
-     * 根据ID删除宠物
-     */
-    @DeleteMapping("/pets/{id}")
-    public ResponseEntity<Void> deletePet(@PathVariable Long id) {
-        boolean deleted = petsService.removeById(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    /**
-     * 根据物种查询宠物
-     */
-    @GetMapping("/pets/species/{species}")
-    public ResponseEntity<List<Pets>> getPetsBySpecies(@PathVariable String species) {
-        QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("species", species);
-        List<Pets> pets = petsService.list(queryWrapper);
-        return ResponseEntity.ok(pets);
-    }
-}
+    

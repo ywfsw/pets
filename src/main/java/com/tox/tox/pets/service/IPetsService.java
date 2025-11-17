@@ -3,6 +3,7 @@ package com.tox.tox.pets.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tox.tox.pets.model.Pets;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
 
@@ -31,4 +32,8 @@ public interface IPetsService extends IService<Pets> {
      * @return
      */
     List<PetLeaderboardDTO> getLeaderboard(int topN);
+
+    PetDetailDTO getPetDetailById(Long id);
+
+    List<Pets> getPetsBySpecies(String species);
 }

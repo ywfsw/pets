@@ -118,10 +118,7 @@ public class DictItemsController {
      */
     @GetMapping("/dictItems/code/{dictCode}")
     public ResponseEntity<List<DictItems>> getDictItemsByCode(@PathVariable String dictCode) {
-        QueryWrapper<DictItems> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("dict_code", dictCode);
-        queryWrapper.orderByAsc("sort_order", "id");
-        List<DictItems> dictItems = dictItemsService.list(queryWrapper);
+        List<DictItems> dictItems = dictItemsService.listByDictCode(dictCode);
         return ResponseEntity.ok(dictItems);
     }
 

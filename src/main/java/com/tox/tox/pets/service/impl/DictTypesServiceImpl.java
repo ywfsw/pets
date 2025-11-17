@@ -1,5 +1,6 @@
 package com.tox.tox.pets.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictTypes;
@@ -43,19 +44,27 @@ public class DictTypesServiceImpl extends ServiceImpl<DictTypesMapper, DictTypes
     }
 
     @Override
-    @CacheEvict(value = "dict_types", allEntries = true)
+    @Cacheable(value = "dict_types_by_parent", key = "#parentCode")
+    public List<DictTypes> listByParentCode(String parentCode) {
+        QueryWrapper<DictTypes> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("parent_code", parentCode);
+        return this.list(queryWrapper);
+    }
+
+    @Override
+    @CacheEvict(value = {"dict_types", "dict_types_by_parent"}, allEntries = true)
     public boolean save(DictTypes entity) {
         return super.save(entity);
     }
 
     @Override
-    @CacheEvict(value = "dict_types", allEntries = true)
+    @CacheEvict(value = {"dict_types", "dict_types_by_parent"}, allEntries = true)
     public boolean updateById(DictTypes entity) {
         return super.updateById(entity);
     }
 
     @Override
-    @CacheEvict(value = "dict_types", allEntries = true)
+    @CacheEvict(value = {"dict_types", "dict_types_by_parent"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
     }

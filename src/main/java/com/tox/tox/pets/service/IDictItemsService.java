@@ -17,4 +17,6 @@ import java.util.List;
 public interface IDictItemsService extends IService<DictItems> {
 
     List<DictItemLookupDTO> findLookupByCode(String dictCode);
+
+    List<DictItems> listByDictCode(String dictCode);
 }
