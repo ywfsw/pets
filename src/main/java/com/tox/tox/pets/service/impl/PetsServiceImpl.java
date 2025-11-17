@@ -20,13 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.Collections;
-import java.util.stream.IntStream;
+
 
 /**
  * <p>
@@ -38,6 +41,8 @@ import java.util.stream.IntStream;
  */
 @Service
 public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IPetsService {
+
+    private static final Logger log = LoggerFactory.getLogger(PetsServiceImpl.class);
     @Autowired
     private LikingService likingService;
 
@@ -54,7 +59,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      * (❗ 核心实现)
      */
     @Override
-    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
+//    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
     public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize) {
 
         // 1. (DB) 创建 MP 分页对象
@@ -92,11 +97,13 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         IPage<PetPageDTO> dtoPage = new Page<>(petPage.getCurrent(), petPage.getSize(), petPage.getTotal());
         dtoPage.setRecords(dtos);
 
+        log.info("Pagination result - Total: {}, Pages: {}", dtoPage.getTotal(), dtoPage.getPages());
+
         return dtoPage;
     }
 
     @Override
-    @Cacheable(value = "pets_leaderboard", key = "#topN")
+    // @Cacheable(value = "pets_leaderboard", key = "#topN")
     public List<PetLeaderboardDTO> getLeaderboard(int topN) {
         // 1. (Redis) 从 LikingService 获取排行榜 (ID 和分数)
         List<ZSetOperations.TypedTuple<String>> leaderboardFromRedis = likingService.getLeaderboard(topN);
@@ -217,7 +224,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     }
 
     @Override
-    @Cacheable(value = "pets_by_species", key = "#species")
+    // @Cacheable(value = "pets_by_species", key = "#species")
     public List<Pets> getPetsBySpecies(String species) {
         QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("species", species);
@@ -225,7 +232,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     }
 
     @Override
-    @Cacheable(value = "pets_list")
+    // @Cacheable(value = "pets_list")
     public List<Pets> list() {
         return super.list();
     }
