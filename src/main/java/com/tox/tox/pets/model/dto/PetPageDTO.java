@@ -5,6 +5,7 @@ import com.tox.tox.pets.model.Pets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
@@ -12,7 +13,9 @@ import java.time.LocalDate;
  */
 @Data
 @NoArgsConstructor
-public class PetPageDTO {
+public class PetPageDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     // --- Pet 基础信息 ---
     private Long id;

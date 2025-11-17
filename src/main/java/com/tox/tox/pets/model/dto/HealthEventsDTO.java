@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
@@ -13,7 +14,10 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @ToString
-public class HealthEventsDTO {
+public class HealthEventsDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * 健康事件ID (主键)
      */

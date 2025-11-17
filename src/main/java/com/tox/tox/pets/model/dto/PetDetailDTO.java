@@ -1,11 +1,11 @@
 package com.tox.tox.pets.model.dto;
 
-import com.tox.tox.pets.model.HealthEvents;
 import com.tox.tox.pets.model.WeightLog;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -16,7 +16,10 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class PetDetailDTO {
+public class PetDetailDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * 宠物唯一ID
      */
