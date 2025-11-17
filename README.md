@@ -78,16 +78,16 @@ mvn spring-boot:run
 
 | 方法 | 路径 | 描述 | 成功响应 (200 OK) |
 |------|------|------|------------------|
-| GET | `/ping` | 健康检查接口 | `"pong"` |
+| GET | `/ping` | 健康检查 / 保活接口 | `"pong"` |
 
 </details>
 
 <details>
 <summary><strong>1. 媒体接口 (Media API)</strong></summary>
 
-| 方法 | 路径 | 描述 | 成功响应 (200 OK) |
-|------|------|------|------------------|
-| GET | `/api/media/upload-signature` | 获取 Cloudinary 安全上传签名 | `{"signature": "...", "timestamp": "...", "api_key": "...", "cloud_name": "..."}` |
+| 方法 | 路径 | 描述 | 请求体 / 查询参数 | 成功响应 (200 OK) |
+|------|------|------|-----------------|------------------|
+| POST | `/api/media/upload-signature` | 获取 Cloudinary 安全上传签名 | `{"param1": "value1", "param2": "value2"}` | `{"signature": "...", "timestamp": "...", "api_key": "...", "cloud_name": "..."}` |
 
 </details>
 
