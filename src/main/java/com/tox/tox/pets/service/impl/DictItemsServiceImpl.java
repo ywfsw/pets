@@ -32,7 +32,13 @@ public class DictItemsServiceImpl extends ServiceImpl<DictItemsMapper, DictItems
     @Override
     @Cacheable(value = "dict_items", key = "#dictCode")
     public List<DictItemLookupDTO> findLookupByCode(String dictCode) {
+        // (推荐) Mapper.xml 中专门写一个 SQL, 只 SELECT id, label
+        // (偷懒) 也可以用已有的 Mapper, 在 Service 层转换 DTO
+
+        // 假设 Mapper 返回的是 POJO (DictItem)
         List<DictItems> items = dictItemsMapper.selectLookupByCode(dictCode);
+
+        // 使用 Stream API 转换为 DTO (Rule 3.1)
         return items.stream()
                 .map(this::convertToLookupDTO)
                 .collect(Collectors.toList());
