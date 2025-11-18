@@ -16,6 +16,7 @@ public class PetLeaderboardDTO implements Serializable {
     private int rank;
     private Long petId;
     private String name;
+    private String profileImageUrl; // 新增字段
     private long likeCount;
 
 }

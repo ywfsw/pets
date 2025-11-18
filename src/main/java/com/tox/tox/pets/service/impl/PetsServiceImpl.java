@@ -3,6 +3,7 @@ package com.tox.tox.pets.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.mapper.PetsMapper;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
@@ -43,7 +44,7 @@ import java.util.Collections;
 public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IPetsService {
 
     private static final Logger log = LoggerFactory.getLogger(PetsServiceImpl.class);
-    @Autowired
+    
     private LikingService likingService;
 
     @Autowired
@@ -54,6 +55,14 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
 
     @Autowired
     private IHealthEventsService healthEventsService;
+
+    @Autowired
+    private ObjectMapper objectMapper; // 新增
+
+    @Autowired
+    public void setLikingService(LikingService likingService) {
+        this.likingService = likingService;
+    }
 
     /**
      * (❗ 核心实现)
@@ -103,44 +112,42 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     }
 
     @Override
-    // @Cacheable(value = "pets_leaderboard", key = "#topN")
     public List<PetLeaderboardDTO> getLeaderboard(int topN) {
-        // 1. (Redis) 从 LikingService 获取排行榜 (ID 和分数)
+        // 1. (Redis) 从 LikingService 获取排行榜 (成员是 JSON, 分数是点赞数)
         List<ZSetOperations.TypedTuple<String>> leaderboardFromRedis = likingService.getLeaderboard(topN);
 
         if (leaderboardFromRedis.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 2. (DB) 提取 Pet ID, 准备数据库批量查询
-        List<Long> petIds = leaderboardFromRedis.stream()
-                .map(tuple -> Long.parseLong(tuple.getValue()))
-                .collect(Collectors.toList());
-
-        // 3. (DB) 批量查询 Pet 的详细信息
-        Map<Long, Pets> petsMap = this.listByIds(petIds).stream()
-                .collect(Collectors.toMap(Pets::getId, pet -> pet));
-
-        // 4. (Java) 组装成 DTO
+        // 2. (Java) 解析 JSON 并组装成 DTO, 不再查询数据库
         return IntStream.range(0, leaderboardFromRedis.size())
                 .mapToObj(i -> {
                     ZSetOperations.TypedTuple<String> tuple = leaderboardFromRedis.get(i);
-                    Long petId = Long.parseLong(tuple.getValue());
-                    Pets pet = petsMap.get(petId);
+                    String memberJson = tuple.getValue();
+                    Double likeCount = tuple.getScore();
 
-                    // (健壮性) 如果 Redis 中的 petId 在数据库中找不到了, 跳过
-                    if (pet == null) {
+                    if (memberJson == null || likeCount == null) {
                         return null;
                     }
 
-                    return new PetLeaderboardDTO(
-                            i + 1, // Rank
-                            petId,
-                            pet.getName(),
-                            tuple.getScore().longValue() // Like Count
-                    );
+                    try {
+                        // 将 JSON 字符串反序列化为 Map
+                        Map<String, Object> member = objectMapper.readValue(memberJson, Map.class);
+
+                        return new PetLeaderboardDTO(
+                                i + 1, // Rank
+                                ((Number) member.get("petId")).longValue(),
+                                (String) member.get("name"),
+                                (String) member.get("profileImageUrl"),
+                                likeCount.longValue()
+                        );
+                    } catch (Exception e) {
+                        log.error("反序列化排行榜成员失败: {}", memberJson, e);
+                        return null; // 忽略解析失败的数据
+                    }
                 })
-                .filter(dto -> dto != null) // 过滤掉没找到的
+                .filter(dto -> dto != null)
                 .collect(Collectors.toList());
     }
 

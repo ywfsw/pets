@@ -1,7 +1,14 @@
 // (LikingService.java)
 package com.tox.tox.pets.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tox.tox.pets.model.Pets;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -18,101 +25,97 @@ import java.util.stream.Collectors;
  * 遵循 Rule 3.1: 健壮的、生产级的代码
  */
 @Service
+@Slf4j
 public class LikingService {
 
-    // (❗) 推荐使用 StringRedisTemplate
-    // Key 和 Value 都是 String, 非常适合点赞计数
     private final StringRedisTemplate redisTemplate;
+    private IPetsService petsService; // 改为非 final
+    private final ObjectMapper objectMapper;
 
-    // (❗ 新增) 排行榜的 Key
     private static final String PETS_LEADERBOARD_KEY = "pets:leaderboard";
 
-    // (❗) 构造函数注入 (Spring 推荐)
+    // 构造函数中移除 IPetsService
     @Autowired
-    public LikingService(StringRedisTemplate redisTemplate) {
+    public LikingService(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
     }
 
-// (在 com.example.pets.service.LikingService 中)
-// (❗) 覆盖这个方法
-// 遵循 Rule 3.3: 提供完整代码片段
+    // 使用 Setter 注入
+    @Autowired
+    public void setPetsService(@Lazy IPetsService petsService) {
+        this.petsService = petsService;
+    }
 
-    /**
-     * (❗ 简化版) 业务逻辑: 宠物点赞 (无限)
-     * (不再需要 userId, 也不再返回 boolean)
-     *
-     * @param petId 要点赞的宠物 ID
-     */
+    // 用于序列化到 Redis 的内部 DTO
+    @Data
+    @AllArgsConstructor
+    private static class PetLeaderboardMember {
+        private Long petId;
+        private String name;
+        private String profileImageUrl;
+    }
+
     public void likePet(Long petId) {
-        // (后端架构师必备) 必须检查参数
         if (petId == null) {
             throw new IllegalArgumentException("Pet ID 不能为空");
         }
 
-        // --- 核心 Redis 逻辑 ---
-
-        // 1. (❗) (已删除) 防刷 Set (SADD) 逻辑
-        // (不再需要检查 userId)
-
-        // 2. (❗) (保留) 计数
-        // 我们只保留这一行:
         String likeCountKey = "pet:like:count:" + petId;
-
-        // (INCR) 原子增1
         Long newCount = redisTemplate.opsForValue().increment(likeCountKey);
 
-        // 3. (❗ 新增) 更新排行榜 (ZADD)
         if (newCount != null) {
-            redisTemplate.opsForZSet().add(PETS_LEADERBOARD_KEY, petId.toString(), newCount);
+            // 1. 获取宠物详细信息
+            Pets pet = petsService.getById(petId);
+            if (pet == null) {
+                log.warn("点赞的宠物不存在, Pet ID: {}", petId);
+                return;
+            }
+
+            // 2. 准备要存入 ZSET 的新成员 (JSON 格式)
+            PetLeaderboardMember member = new PetLeaderboardMember(pet.getId(), pet.getName(), pet.getProfileImageUrl());
+            try {
+                String memberJson = objectMapper.writeValueAsString(member);
+
+                // 3. (重要) 移除旧格式的成员 (只包含 petId 的字符串)
+                // 这一步是为了数据迁移, 从旧格式过渡到新格式
+                // 在稳定运行后, 这行代码可以被移除
+                redisTemplate.opsForZSet().remove(PETS_LEADERBOARD_KEY, petId.toString());
+
+                // 4. 将新格式的成员 (JSON) 添加到 ZSET
+                redisTemplate.opsForZSet().add(PETS_LEADERBOARD_KEY, memberJson, newCount);
+
+            } catch (JsonProcessingException e) {
+                log.error("序列化 PetLeaderboardMember 失败, Pet ID: {}", petId, e);
+            }
         }
     }
 
-    /**
-     * (业务逻辑) 获取宠物的总点赞数
-     *
-     * @param petId 宠物 ID
-     * @return 总点赞数
-     */
     public long getPetLikeCount(Long petId) {
         if (petId == null) return 0;
-        
         String likeCountKey = "pet:like:count:" + petId;
-        
-        // (GET) 获取计数值
         String countStr = redisTemplate.opsForValue().get(likeCountKey);
-        
         if (countStr == null) {
-            return 0; // 还没有人点赞
+            return 0;
         }
-        
         try {
             return Long.parseLong(countStr);
         } catch (NumberFormatException e) {
-            // (健壮性) 如果数据被污染了 (不是数字), 返回 0
             return 0;
         }
     }
 
-    /**
-     * (❗ 新增) 批量获取多个 Pet 的点赞数 (MGET)
-     *
-     * @param petIds 宠物 ID 列表
-     * @return Map<PetID, LikeCount>
-     */
     public Map<Long, Long> getPetLikeCounts(List<Long> petIds) {
         if (petIds == null || petIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        // 1. (MGET) 构造所有的 Key
         List<String> keys = petIds.stream()
                 .map(id -> "pet:like:count:" + id)
                 .collect(Collectors.toList());
 
-        // 2. (MGET) 一次性从 Redis 获取所有值
         List<String> countStrings = redisTemplate.opsForValue().multiGet(keys);
 
-        // 3. (MGET) 组装回 Map
         Map<Long, Long> countsMap = new HashMap<>();
         if (countStrings == null) {
             return countsMap;
@@ -121,7 +124,6 @@ public class LikingService {
         for (int i = 0; i < petIds.size(); i++) {
             Long petId = petIds.get(i);
             String countStr = countStrings.get(i);
-
             long count = 0L;
             if (countStr != null) {
                 try {
@@ -136,14 +138,7 @@ public class LikingService {
         return countsMap;
     }
 
-    /**
-     * (❗ 新增) 获取点赞排行榜
-     *
-     * @param topN 需要的名次数
-     * @return 排行榜 (Pet ID 和分数)
-     */
     public List<ZSetOperations.TypedTuple<String>> getLeaderboard(int topN) {
-        // (ZREVRANGEBYSCORE) 从高到低查询
         Set<ZSetOperations.TypedTuple<String>> range = redisTemplate.opsForZSet()
                 .reverseRangeWithScores(PETS_LEADERBOARD_KEY, 0, topN - 1);
 

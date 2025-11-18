@@ -8,39 +8,48 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
     @Bean
-    public RedisCacheConfiguration redisCacheConfiguration() {
-        // First, create a custom ObjectMapper
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        // 1. 配置序列化器
         ObjectMapper objectMapper = new ObjectMapper();
-        // Register the JavaTimeModule to handle Java 8 date/time types like LocalDate, OffsetDateTime
         objectMapper.registerModule(new JavaTimeModule());
-        // Enable default typing. This will add a "@class" property to the JSON,
-        // which Jackson will use to deserialize the JSON back to the correct Java object type.
-        // LaissezFaireSubTypeValidator is used for security and allows any type.
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
-
-        // Create a JSON serializer with the custom ObjectMapper
         GenericJackson2JsonRedisSerializer jsonRedisSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        // Create the cache configuration
-        return RedisCacheConfiguration.defaultCacheConfig()
-                // Set a default expiration time for cache entries (e.g., 30 minutes)
+        // 2. 创建默认缓存配置 (30分钟过期)
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
-                // Configure the key serializer (keys will be simple strings)
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                // Configure the value serializer (values will be JSON)
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonRedisSerializer))
-                // Disable caching of null values to prevent potential issues
                 .disableCachingNullValues();
+
+        // 3. 为 'pets_by_id' 创建一个永不过期的特定配置
+        RedisCacheConfiguration petsByIdConfig = defaultConfig.entryTtl(Duration.ZERO);
+
+        // 4. 将特定配置应用到对应的缓存名称
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        cacheConfigurations.put("pets_by_id", petsByIdConfig);
+        // 可以为其他缓存添加更多特定配置
+        // cacheConfigurations.put("another_cache", defaultConfig.entryTtl(Duration.ofHours(1)));
+
+        // 5. 构建并返回 RedisCacheManager
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultConfig) // 设置默认配置
+                .withInitialCacheConfigurations(cacheConfigurations) // 应用特定配置
+                .build();
     }
 }
