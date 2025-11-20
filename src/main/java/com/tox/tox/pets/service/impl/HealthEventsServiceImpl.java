@@ -37,6 +37,7 @@ public class HealthEventsServiceImpl extends ServiceImpl<HealthEventsMapper, Hea
     public List<HealthEvents> listUpcoming() {
         QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
         queryWrapper.isNotNull("next_due_date");
+        queryWrapper.ge("next_due_date", java.time.LocalDate.now());
         queryWrapper.le("next_due_date", java.time.LocalDate.now().plusDays(7));
         queryWrapper.orderByAsc("next_due_date");
         return this.list(queryWrapper);
