@@ -98,7 +98,7 @@ mvn spring-boot:run
 |------|------|------|----------|------------------|
 | POST | `/api/pets/{petId}/like` | 点赞一个宠物 | N/A | `{"success": true, "message": "点赞成功"}` |
 | GET | `/api/pets/{petId}/likes/count` | 获取宠物的总点赞数 | N/A | `{"petId": 1, "count": 10}` |
-| GET | `/api/pets/leaderboard` | 获取宠物点赞排行榜 | `topN=10` | `[{"rank": 1, "petId": 12, "name": "豆豆", "likeCount": 158}, ...]` |
+| GET | `/api/pets/leaderboard` | 获取宠物点赞排行榜 (此接口在 `PetsController` 中实现) | `topN=10` | `[{"rank": 1, "petId": 12, "name": "豆豆", "likeCount": 158}, ...]` |
 
 </details>
 
