@@ -43,7 +43,7 @@ public class PetGallery implements Serializable {
     private String imageUrl;
 
     /**
-     * Cloudinary 的 Public ID
+     * Public ID
      */
     @TableField("public_id")
     private String publicId;

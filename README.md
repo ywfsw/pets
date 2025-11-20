@@ -107,7 +107,7 @@ mvn spring-boot:run
 
 | 方法 | 路径 | 描述 | 请求体 / 查询参数 | 成功响应 (200 OK) |
 |------|------|------|-----------------|------------------|
-| POST | `/api/pets` | 创建新宠物 (支持上传头像) | `{"speciesId": 1, "name": "咪咪", "avatarUrl": "..."}` | `"宠物添加成功，ID：1"` |
+| POST | `/api/pets` | 创建新宠物 (支持上传头像) | `{"speciesId": 1, "name": "咪咪", "profileImageUrl": "...", "profileImagePublicId": "..."}` | `"宠物添加成功，ID：1"` |
 | GET | `/api/pets` | 获取所有宠物列表 | N/A | `[{"id": 1, "name": "咪咪", ...}]` |
 | GET | `/api/pets/page` | 分页获取宠物列表 | `pageNum=1&pageSize=10` | `{"records": [...], "total": 100, ...}` |
 | GET | `/api/pets/{id}` | 根据ID获取宠物基本信息 | N/A | `{"id": 1, "name": "咪咪", ...}` |
@@ -186,10 +186,10 @@ mvn spring-boot:run
 
 | 方法 | 路径 | 描述 | 请求体 / 查询参数 | 成功响应 (200 OK) |
 |------|------|------|-----------------|------------------|
-| POST | `/api/petGallery` | 添加宠物相册图片 | `{"petId": 1, "imageUrl": "...", "caption": "..."}` | `"相册图片添加成功，ID：1"` |
+| POST | `/api/petGallery` | 添加宠物相册图片 | `{"petId": 1, "imageUrl": "...", "publicId": "...", "description": "..."}` | `"相册图片添加成功，ID：1"` |
 | GET | `/api/petGallery` | 获取所有宠物相册图片 | N/A | `[{"id": 1, "petId": 1, ...}]` |
 | GET | `/api/petGallery/{id}` | 根据ID获取宠物相册图片 | N/A | `{"id": 1, "petId": 1, ...}` |
-| PUT | `/api/petGallery/{id}` | 根据ID更新宠物相册图片 | `{"caption": "更新后的描述"}` | `"相册图片更新成功，ID：1"` |
+| PUT | `/api/petGallery/{id}` | 根据ID更新宠物相册图片 | `{"description": "更新后的描述"}` | `"相册图片更新成功，ID：1"` |
 | DELETE | `/api/petGallery/{id}` | 根据ID删除宠物相册图片 | N/A | `"相册图片删除成功，ID：1"` |
 | GET | `/api/petGallery/pet/{petId}` | 根据宠物ID获取相册列表 | N/A | `[{"id": 1, "petId": 1, ...}]` |
 
