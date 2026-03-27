@@ -48,3 +48,10 @@ logs/
 # （Tox）你（Tox）的（Tox）JVM 崩溃日志
 hs_err_pid*
 replay_pid*
+
+### 6. Eclipse 配置
+.settings/
+.classpath
+.project
+.wtpmodules.xml
+/.factorypath

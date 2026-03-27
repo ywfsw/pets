@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictTypes;
 import com.tox.tox.pets.service.IDictTypesService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "字典类型管理", description = "字典类型相关的增删改查接口")
 public class DictTypesController {
 
     @Autowired
@@ -31,6 +35,7 @@ public class DictTypesController {
      * 添加字典类型
      */
     @PostMapping("/dictTypes")
+    @Operation(summary = "添加字典类型", description = "创建一个新的字典类型")
     public ResponseEntity<String> addDictType(@RequestBody DictTypes dictType) {
         // 设置创建时间
         dictType.setCreatedAt(OffsetDateTime.now());
@@ -46,6 +51,7 @@ public class DictTypesController {
      * 获取字典类型列表
      */
     @GetMapping("/dictTypes")
+    @Operation(summary = "获取字典类型列表", description = "获取所有字典类型列表")
     public ResponseEntity<List<DictTypes>> listDictTypes() {
         List<DictTypes> dictTypes = dictTypesService.list();
         return ResponseEntity.ok(dictTypes);
@@ -55,9 +61,10 @@ public class DictTypesController {
      * 分页查询字典类型
      */
     @GetMapping("/dictTypes/page")
+    @Operation(summary = "分页查询字典类型", description = "分页获取字典类型列表")
     public ResponseEntity<Page<DictTypes>> pageDictTypes(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize) {
         Page<DictTypes> page = new Page<>(pageNum, pageSize);
         Page<DictTypes> resultPage = dictTypesService.page(page);
         return ResponseEntity.ok(resultPage);
@@ -67,7 +74,8 @@ public class DictTypesController {
      * 根据字典编码获取字典类型
      */
     @GetMapping("/dictTypes/{dictCode}")
-    public ResponseEntity<DictTypes> getDictTypeByCode(@PathVariable String dictCode) {
+    @Operation(summary = "获取字典类型详情", description = "根据字典编码获取字典类型")
+    public ResponseEntity<DictTypes> getDictTypeByCode(@Parameter(description = "字典编码") @PathVariable String dictCode) {
         DictTypes dictType = dictTypesService.getById(dictCode);
         if (dictType != null) {
             return ResponseEntity.ok(dictType);
@@ -80,7 +88,8 @@ public class DictTypesController {
      * 根据父级编码获取字典类型列表
      */
     @GetMapping("/dictTypes/parent/{parentCode}")
-    public ResponseEntity<List<DictTypes>> getDictTypesByParentCode(@PathVariable String parentCode) {
+    @Operation(summary = "根据父级编码获取字典类型", description = "获取指定父级编码下的所有字典类型")
+    public ResponseEntity<List<DictTypes>> getDictTypesByParentCode(@Parameter(description = "父级编码") @PathVariable String parentCode) {
         List<DictTypes> dictTypes = dictTypesService.listByParentCode(parentCode);
         return ResponseEntity.ok(dictTypes);
     }
@@ -89,7 +98,8 @@ public class DictTypesController {
      * 更新字典类型
      */
     @PutMapping("/dictTypes/{dictCode}")
-    public ResponseEntity<String> updateDictType(@PathVariable String dictCode, @RequestBody DictTypes dictType) {
+    @Operation(summary = "更新字典类型", description = "根据字典编码更新字典类型")
+    public ResponseEntity<String> updateDictType(@Parameter(description = "字典编码") @PathVariable String dictCode, @RequestBody DictTypes dictType) {
         // 确保字典编码一致
         dictType.setDictCode(dictCode);
         // 不更新创建时间
@@ -111,7 +121,8 @@ public class DictTypesController {
      * 删除字典类型
      */
     @DeleteMapping("/dictTypes/{dictCode}")
-    public ResponseEntity<String> deleteDictType(@PathVariable String dictCode) {
+    @Operation(summary = "删除字典类型", description = "根据字典编码删除字典类型")
+    public ResponseEntity<String> deleteDictType(@Parameter(description = "字典编码") @PathVariable String dictCode) {
         boolean deleted = dictTypesService.removeById(dictCode);
         if (deleted) {
             return ResponseEntity.ok("字典类型删除成功，编码：" + dictCode);

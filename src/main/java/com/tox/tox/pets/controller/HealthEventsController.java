@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.HealthEvents;
 import com.tox.tox.pets.service.IHealthEventsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "健康事件管理", description = "宠物健康事件相关的增删改查接口")
 public class HealthEventsController {
 
     @Autowired
@@ -32,6 +36,7 @@ public class HealthEventsController {
      * 添加健康事件
      */
     @PostMapping("/health-events")
+    @Operation(summary = "添加健康事件", description = "添加一个宠物健康事件")
     public ResponseEntity<String> addHealthEvent(@RequestBody HealthEvents event) {
         // 设置创建时间
         event.setCreatedAt(OffsetDateTime.now());
@@ -47,6 +52,7 @@ public class HealthEventsController {
      * 获取健康事件列表
      */
     @GetMapping("/health-events")
+    @Operation(summary = "获取健康事件列表", description = "获取所有健康事件列表")
     public ResponseEntity<List<HealthEvents>> listHealthEvents() {
         List<HealthEvents> events = healthEventsService.list();
         return ResponseEntity.ok(events);
@@ -56,9 +62,10 @@ public class HealthEventsController {
      * 分页查询健康事件
      */
     @GetMapping("/health-events/page")
+    @Operation(summary = "分页查询健康事件", description = "分页获取健康事件列表")
     public ResponseEntity<Page<HealthEvents>> pageHealthEvents(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize) {
         Page<HealthEvents> page = new Page<>(pageNum, pageSize);
         Page<HealthEvents> resultPage = healthEventsService.page(page);
         return ResponseEntity.ok(resultPage);
@@ -68,7 +75,8 @@ public class HealthEventsController {
      * 根据ID获取健康事件
      */
     @GetMapping("/health-events/{id}")
-    public ResponseEntity<HealthEvents> getHealthEventById(@PathVariable Long id) {
+    @Operation(summary = "获取健康事件详情", description = "根据ID获取健康事件")
+    public ResponseEntity<HealthEvents> getHealthEventById(@Parameter(description = "健康事件ID") @PathVariable Long id) {
         HealthEvents event = healthEventsService.getById(id);
         if (event != null) {
             return ResponseEntity.ok(event);
@@ -81,7 +89,8 @@ public class HealthEventsController {
      * 根据ID更新健康事件
      */
     @PutMapping("/health-events/{id}")
-    public ResponseEntity<HealthEvents> updateHealthEvent(@PathVariable Long id, @RequestBody HealthEvents event) {
+    @Operation(summary = "更新健康事件", description = "根据ID更新健康事件")
+    public ResponseEntity<HealthEvents> updateHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id, @RequestBody HealthEvents event) {
         // 确保ID一致
         event.setId(id);
         // 不更新创建时间
@@ -103,7 +112,8 @@ public class HealthEventsController {
      * 根据ID删除健康事件
      */
     @DeleteMapping("/health-events/{id}")
-    public ResponseEntity<Void> deleteHealthEvent(@PathVariable Long id) {
+    @Operation(summary = "删除健康事件", description = "根据ID删除健康事件")
+    public ResponseEntity<Void> deleteHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id) {
         boolean deleted = healthEventsService.removeById(id);
         if (deleted) {
             return ResponseEntity.noContent().build();
@@ -119,8 +129,8 @@ public class HealthEventsController {
          */
 
         @GetMapping("/health-events/pet/{petId}")
-
-        public ResponseEntity<List<HealthEvents>> getHealthEventsByPetId(@PathVariable Long petId) {
+        @Operation(summary = "根据宠物ID获取健康事件", description = "获取指定宠物的所有健康事件")
+        public ResponseEntity<List<HealthEvents>> getHealthEventsByPetId(@Parameter(description = "宠物ID") @PathVariable Long petId) {
 
             List<HealthEvents> events = healthEventsService.listByPetId(petId);
 
@@ -137,7 +147,7 @@ public class HealthEventsController {
          */
 
         @GetMapping("/health-events/upcoming")
-
+        @Operation(summary = "获取即将到期的健康事件", description = "获取7天内即将到期的健康事件")
         public ResponseEntity<List<HealthEvents>> getUpcomingHealthEvents() {
 
             List<HealthEvents> events = healthEventsService.listUpcoming();

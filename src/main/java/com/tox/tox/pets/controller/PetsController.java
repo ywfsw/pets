@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.model.dto.*;
 import com.tox.tox.pets.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "宠物管理", description = "宠物相关的增删改查接口")
 public class PetsController {
 
     @Autowired
@@ -47,6 +51,7 @@ public class PetsController {
      * 添加宠物
      */
     @PostMapping("/pets")
+    @Operation(summary = "添加宠物", description = "创建一个新的宠物记录")
     @Transactional
     public ResponseEntity<String> addPet(@RequestBody PetRequestDTO petRequest) {
         // 设置创建时间
@@ -73,6 +78,7 @@ public class PetsController {
      * 获取宠物列表
      */
     @GetMapping("/pets")
+    @Operation(summary = "获取宠物列表", description = "获取所有宠物列表")
     public ResponseEntity<List<Pets>> listPets() {
         List<Pets> pets = petsService.list();
         return ResponseEntity.ok(pets);
@@ -85,6 +91,7 @@ public class PetsController {
      * (完全匹配你的 API 文档)
      */
     @GetMapping("/pets/page")
+    @Operation(summary = "分页获取宠物列表", description = "分页获取宠物列表，包含点赞数")
     public ResponseEntity<IPage<PetPageDTO>> getPetPage(
             // (❗) 接收 Query 参数, 匹配你的 API 文档
             @RequestParam(defaultValue = "1") int pageNum,
@@ -105,6 +112,7 @@ public class PetsController {
      * 获取点赞排行榜
      */
     @GetMapping("/pets/leaderboard")
+    @Operation(summary = "获取点赞排行榜", description = "获取点赞数最高的宠物列表")
     public ResponseEntity<List<PetLeaderboardDTO>> getLeaderboard(
             @RequestParam(defaultValue = "10") int topN
     ) {
@@ -116,7 +124,8 @@ public class PetsController {
      * 根据ID获取宠物信息
      */
     @GetMapping("/pets/{id}")
-    public ResponseEntity<Pets> getPetById(@PathVariable Long id) {
+    @Operation(summary = "获取宠物详情", description = "根据ID获取宠物详细信息")
+    public ResponseEntity<Pets> getPetById(@Parameter(description = "宠物ID") @PathVariable Long id) {
         Pets pet = petsService.getById(id);
         if (pet != null) {
             return ResponseEntity.ok(pet);
@@ -132,8 +141,8 @@ public class PetsController {
          */
 
         @GetMapping("/pets/detail/{id}")
-
-        public ResponseEntity<PetDetailDTO> getPetDetailById(@PathVariable Long id) {
+        @Operation(summary = "获取宠物详细信息", description = "根据ID获取宠物详细信息，包含健康事件等")
+        public ResponseEntity<PetDetailDTO> getPetDetailById(@Parameter(description = "宠物ID") @PathVariable Long id) {
 
             PetDetailDTO detailDTO = petsService.getPetDetailById(id);
 
@@ -156,10 +165,9 @@ public class PetsController {
          */
 
                 @PutMapping("/pets/{id}")
-
+                @Operation(summary = "更新宠物信息", description = "根据ID更新宠物信息")
                 @Transactional
-
-                public ResponseEntity<Pets> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
+                public ResponseEntity<Pets> updatePet(@Parameter(description = "宠物ID") @PathVariable Long id, @RequestBody PetRequestDTO petRequest) {
 
                     // 确保ID一致
 
@@ -248,8 +256,8 @@ public class PetsController {
          */
 
         @DeleteMapping("/pets/{id}")
-
-        public ResponseEntity<Void> deletePet(@PathVariable Long id) {
+        @Operation(summary = "删除宠物", description = "根据ID删除宠物")
+        public ResponseEntity<Void> deletePet(@Parameter(description = "宠物ID") @PathVariable Long id) {
 
             boolean deleted = petsService.removeById(id);
 
@@ -274,8 +282,8 @@ public class PetsController {
          */
 
         @GetMapping("/pets/species/{species}")
-
-        public ResponseEntity<List<Pets>> getPetsBySpecies(@PathVariable String species) {
+        @Operation(summary = "根据物种查询宠物", description = "根据宠物物种获取宠物列表")
+        public ResponseEntity<List<Pets>> getPetsBySpecies(@Parameter(description = "宠物物种") @PathVariable String species) {
 
             List<Pets> pets = petsService.getPetsBySpecies(species);
 

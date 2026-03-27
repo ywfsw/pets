@@ -5,6 +5,9 @@ import com.tox.tox.pets.model.dto.ErrorResponseDTO;
 import com.tox.tox.pets.model.dto.LikeCountDTO;
 import com.tox.tox.pets.model.dto.LikeResponseDTO;
 import com.tox.tox.pets.service.LikingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "点赞管理", description = "宠物点赞相关接口")
 public class LikingController {
 
     private final LikingService likingService;
@@ -37,8 +41,9 @@ public class LikingController {
      * @return LikeResponseDTO (告知前端点赞是否成功)
      */
     @PostMapping("/pets/{petId}/like")
+    @Operation(summary = "点赞宠物", description = "为指定宠物点赞")
     public ResponseEntity<LikeResponseDTO> likePet(
-            @PathVariable Long petId
+            @Parameter(description = "宠物ID") @PathVariable Long petId
             // (❗) TODO: 生产环境中, 必须从 Spring Security 获取用户
             // (取消注释下面这行, 并替换掉 STUBBED_USER_ID)
             // @AuthenticationPrincipal UserDetails userDetails 
@@ -56,7 +61,8 @@ public class LikingController {
      * @return LikeCountDTO (包含总数)
      */
     @GetMapping("/pets/{petId}/likes/count")
-    public ResponseEntity<LikeCountDTO> getPetLikeCount(@PathVariable Long petId) {
+    @Operation(summary = "获取宠物点赞数", description = "获取指定宠物的点赞总数")
+    public ResponseEntity<LikeCountDTO> getPetLikeCount(@Parameter(description = "宠物ID") @PathVariable Long petId) {
         
         long count = likingService.getPetLikeCount(petId);
         

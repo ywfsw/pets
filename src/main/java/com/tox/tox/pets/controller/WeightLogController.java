@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.WeightLog;
 import com.tox.tox.pets.service.IWeightLogService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/weight-logs")
+@Tag(name = "体重记录管理", description = "宠物体重记录相关的增删改查接口")
 public class WeightLogController {
 
     @Autowired
@@ -32,6 +36,7 @@ public class WeightLogController {
      * 添加体重记录
      */
     @PostMapping
+    @Operation(summary = "添加体重记录", description = "添加一条宠物体重记录")
     public ResponseEntity<String> addWeightLog(@RequestBody WeightLog log) {
         // 设置创建时间
         log.setCreatedAt(OffsetDateTime.now());
@@ -47,6 +52,7 @@ public class WeightLogController {
      * 获取体重记录列表
      */
     @GetMapping
+    @Operation(summary = "获取体重记录列表", description = "获取所有体重记录列表")
     public ResponseEntity<List<WeightLog>> listWeightLogs() {
         List<WeightLog> logs = weightLogService.list();
         return ResponseEntity.ok(logs);
@@ -56,9 +62,10 @@ public class WeightLogController {
      * 分页查询体重记录
      */
     @GetMapping("/page")
+    @Operation(summary = "分页查询体重记录", description = "分页获取体重记录列表")
     public ResponseEntity<Page<WeightLog>> pageWeightLogs(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize) {
         Page<WeightLog> page = new Page<>(pageNum, pageSize);
         Page<WeightLog> resultPage = weightLogService.page(page);
         return ResponseEntity.ok(resultPage);
@@ -68,7 +75,8 @@ public class WeightLogController {
      * 根据ID获取体重记录
      */
     @GetMapping("/{id}")
-    public ResponseEntity<WeightLog> getWeightLogById(@PathVariable Long id) {
+    @Operation(summary = "获取体重记录详情", description = "根据ID获取体重记录")
+    public ResponseEntity<WeightLog> getWeightLogById(@Parameter(description = "体重记录ID") @PathVariable Long id) {
         WeightLog log = weightLogService.getById(id);
         if (log != null) {
             return ResponseEntity.ok(log);
@@ -81,7 +89,8 @@ public class WeightLogController {
      * 根据ID更新体重记录
      */
     @PutMapping("/{id}")
-    public ResponseEntity<WeightLog> updateWeightLog(@PathVariable Long id, @RequestBody WeightLog log) {
+    @Operation(summary = "更新体重记录", description = "根据ID更新体重记录")
+    public ResponseEntity<WeightLog> updateWeightLog(@Parameter(description = "体重记录ID") @PathVariable Long id, @RequestBody WeightLog log) {
         // 确保ID一致
         log.setId(id);
         // 不更新创建时间
@@ -103,7 +112,8 @@ public class WeightLogController {
      * 根据ID删除体重记录
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWeightLog(@PathVariable Long id) {
+    @Operation(summary = "删除体重记录", description = "根据ID删除体重记录")
+    public ResponseEntity<Void> deleteWeightLog(@Parameter(description = "体重记录ID") @PathVariable Long id) {
         boolean deleted = weightLogService.removeById(id);
         if (deleted) {
             return ResponseEntity.noContent().build();
@@ -119,8 +129,8 @@ public class WeightLogController {
          */
 
         @GetMapping("/pet/{petId}")
-
-        public ResponseEntity<List<WeightLog>> getWeightLogsByPetId(@PathVariable Long petId) {
+        @Operation(summary = "根据宠物ID获取体重记录", description = "获取指定宠物的所有体重记录")
+        public ResponseEntity<List<WeightLog>> getWeightLogsByPetId(@Parameter(description = "宠物ID") @PathVariable Long petId) {
 
             List<WeightLog> logs = weightLogService.listByPetId(petId);
 
@@ -137,8 +147,8 @@ public class WeightLogController {
          */
 
         @GetMapping("/pet/{petId}/latest")
-
-        public ResponseEntity<WeightLog> getLatestWeightLogByPetId(@PathVariable Long petId) {
+        @Operation(summary = "获取宠物最新体重记录", description = "获取指定宠物的最新体重记录")
+        public ResponseEntity<WeightLog> getLatestWeightLogByPetId(@Parameter(description = "宠物ID") @PathVariable Long petId) {
 
             WeightLog log = weightLogService.getLatestByPetId(petId);
 
