@@ -1,5 +1,6 @@
 package com.tox.tox.pets.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.WeightLog;
@@ -33,8 +34,9 @@ public class WeightLogController {
     private IWeightLogService weightLogService;
 
     /**
-     * 添加体重记录
+     * 添加体重记录 - 需要登录
      */
+    @SaCheckLogin
     @PostMapping
     @Operation(summary = "添加体重记录", description = "添加一条宠物体重记录")
     public ResponseEntity<String> addWeightLog(@RequestBody WeightLog log) {
@@ -49,7 +51,7 @@ public class WeightLogController {
     }
 
     /**
-     * 获取体重记录列表
+     * 获取体重记录列表 - 公开接口
      */
     @GetMapping
     @Operation(summary = "获取体重记录列表", description = "获取所有体重记录列表")
@@ -59,7 +61,7 @@ public class WeightLogController {
     }
 
     /**
-     * 分页查询体重记录
+     * 分页查询体重记录 - 公开接口
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询体重记录", description = "分页获取体重记录列表")
@@ -72,7 +74,7 @@ public class WeightLogController {
     }
 
     /**
-     * 根据ID获取体重记录
+     * 根据ID获取体重记录 - 公开接口
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取体重记录详情", description = "根据ID获取体重记录")
@@ -86,8 +88,9 @@ public class WeightLogController {
     }
 
     /**
-     * 根据ID更新体重记录
+     * 根据ID更新体重记录 - 需要登录
      */
+    @SaCheckLogin
     @PutMapping("/{id}")
     @Operation(summary = "更新体重记录", description = "根据ID更新体重记录")
     public ResponseEntity<WeightLog> updateWeightLog(@Parameter(description = "体重记录ID") @PathVariable Long id, @RequestBody WeightLog log) {
@@ -109,8 +112,9 @@ public class WeightLogController {
     }
 
     /**
-     * 根据ID删除体重记录
+     * 根据ID删除体重记录 - 需要登录
      */
+    @SaCheckLogin
     @DeleteMapping("/{id}")
     @Operation(summary = "删除体重记录", description = "根据ID删除体重记录")
     public ResponseEntity<Void> deleteWeightLog(@Parameter(description = "体重记录ID") @PathVariable Long id) {
@@ -124,7 +128,7 @@ public class WeightLogController {
 
         /**
 
-         * 根据宠物ID获取体重记录历史
+         * 根据宠物ID获取体重记录历史 - 公开接口
 
          */
 
@@ -138,11 +142,11 @@ public class WeightLogController {
 
         }
 
-    
+
 
         /**
 
-         * 获取宠物最新体重记录
+         * 获取宠物最新体重记录 - 公开接口
 
          */
 
@@ -165,5 +169,3 @@ public class WeightLogController {
         }
 
     }
-
-    

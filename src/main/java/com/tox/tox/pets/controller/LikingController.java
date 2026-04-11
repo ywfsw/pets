@@ -1,6 +1,7 @@
 package com.tox.tox.pets.controller;
 
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.tox.tox.pets.model.dto.ErrorResponseDTO;
 import com.tox.tox.pets.model.dto.LikeCountDTO;
 import com.tox.tox.pets.model.dto.LikeResponseDTO;
@@ -12,10 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-// (❗) TODO: 当你引入 Spring Security 时, 取消下面这行注释
-// import org.springframework.security.core.annotation.AuthenticationPrincipal;
-// import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 点赞功能的 API Controller
@@ -35,7 +32,7 @@ public class LikingController {
     }
 
     /**
-     * API: 点赞一个宠物
+     * API: 点赞一个宠物 - 公开接口，任何人都可以点赞
      *
      * @param petId 要点赞的宠物 ID (来自路径)
      * @return LikeResponseDTO (告知前端点赞是否成功)
@@ -44,18 +41,14 @@ public class LikingController {
     @Operation(summary = "点赞宠物", description = "为指定宠物点赞")
     public ResponseEntity<LikeResponseDTO> likePet(
             @Parameter(description = "宠物ID") @PathVariable Long petId
-            // (❗) TODO: 生产环境中, 必须从 Spring Security 获取用户
-            // (取消注释下面这行, 并替换掉 STUBBED_USER_ID)
-            // @AuthenticationPrincipal UserDetails userDetails 
     ) {
-
         // 调用 Service 层
         likingService.likePet(petId);
-            return ResponseEntity.ok(new LikeResponseDTO(true, "点赞成功"));
+        return ResponseEntity.ok(new LikeResponseDTO(true, "点赞成功"));
     }
 
     /**
-     * API: 获取宠物的总点赞数
+     * API: 获取宠物的总点赞数 - 公开接口
      *
      * @param petId 宠物 ID (来自路径)
      * @return LikeCountDTO (包含总数)
@@ -63,9 +56,9 @@ public class LikingController {
     @GetMapping("/pets/{petId}/likes/count")
     @Operation(summary = "获取宠物点赞数", description = "获取指定宠物的点赞总数")
     public ResponseEntity<LikeCountDTO> getPetLikeCount(@Parameter(description = "宠物ID") @PathVariable Long petId) {
-        
+
         long count = likingService.getPetLikeCount(petId);
-        
+
         // (HTTP 200 OK)
         return ResponseEntity.ok(new LikeCountDTO(petId, count));
     }
@@ -85,8 +78,3 @@ public class LikingController {
                 .body(new ErrorResponseDTO(ex.getMessage()));
     }
 }
-
-
-
-
-

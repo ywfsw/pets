@@ -1,5 +1,6 @@
 package com.tox.tox.pets.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.HealthEvents;
@@ -33,8 +34,9 @@ public class HealthEventsController {
     private IHealthEventsService healthEventsService;
 
     /**
-     * 添加健康事件
+     * 添加健康事件 - 需要登录
      */
+    @SaCheckLogin
     @PostMapping("/health-events")
     @Operation(summary = "添加健康事件", description = "添加一个宠物健康事件")
     public ResponseEntity<String> addHealthEvent(@RequestBody HealthEvents event) {
@@ -49,7 +51,7 @@ public class HealthEventsController {
     }
 
     /**
-     * 获取健康事件列表
+     * 获取健康事件列表 - 公开接口
      */
     @GetMapping("/health-events")
     @Operation(summary = "获取健康事件列表", description = "获取所有健康事件列表")
@@ -59,7 +61,7 @@ public class HealthEventsController {
     }
 
     /**
-     * 分页查询健康事件
+     * 分页查询健康事件 - 公开接口
      */
     @GetMapping("/health-events/page")
     @Operation(summary = "分页查询健康事件", description = "分页获取健康事件列表")
@@ -72,7 +74,7 @@ public class HealthEventsController {
     }
 
     /**
-     * 根据ID获取健康事件
+     * 根据ID获取健康事件 - 公开接口
      */
     @GetMapping("/health-events/{id}")
     @Operation(summary = "获取健康事件详情", description = "根据ID获取健康事件")
@@ -86,8 +88,9 @@ public class HealthEventsController {
     }
 
     /**
-     * 根据ID更新健康事件
+     * 根据ID更新健康事件 - 需要登录
      */
+    @SaCheckLogin
     @PutMapping("/health-events/{id}")
     @Operation(summary = "更新健康事件", description = "根据ID更新健康事件")
     public ResponseEntity<HealthEvents> updateHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id, @RequestBody HealthEvents event) {
@@ -109,8 +112,9 @@ public class HealthEventsController {
     }
 
     /**
-     * 根据ID删除健康事件
+     * 根据ID删除健康事件 - 需要登录
      */
+    @SaCheckLogin
     @DeleteMapping("/health-events/{id}")
     @Operation(summary = "删除健康事件", description = "根据ID删除健康事件")
     public ResponseEntity<Void> deleteHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id) {
@@ -124,7 +128,7 @@ public class HealthEventsController {
 
         /**
 
-         * 根据宠物ID获取健康事件
+         * 根据宠物ID获取健康事件 - 公开接口
 
          */
 
@@ -138,11 +142,11 @@ public class HealthEventsController {
 
         }
 
-    
+
 
         /**
 
-         * 获取即将到期的健康事件（7天内）
+         * 获取即将到期的健康事件（7天内）- 公开接口
 
          */
 
@@ -157,5 +161,3 @@ public class HealthEventsController {
         }
 
     }
-
-    

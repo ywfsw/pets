@@ -1,5 +1,6 @@
 package com.tox.tox.pets.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tox.tox.pets.model.PetGallery;
 import com.tox.tox.pets.service.IPetGalleryService;
@@ -31,8 +32,9 @@ public class PetGalleryController {
     private IPetGalleryService petGalleryService;
 
     /**
-     * 添加相册图片
+     * 添加相册图片 - 需要登录
      */
+    @SaCheckLogin
     @PostMapping("/petGallery")
     @Operation(summary = "添加相册图片", description = "添加一张宠物相册图片")
     public ResponseEntity<String> addPetGallery(@RequestBody PetGallery petGallery) {
@@ -46,7 +48,7 @@ public class PetGalleryController {
     }
 
     /**
-     * 获取所有相册图片
+     * 获取所有相册图片 - 公开接口
      */
     @GetMapping("/petGallery")
     @Operation(summary = "获取所有相册图片", description = "获取所有宠物的相册图片列表")
@@ -56,7 +58,7 @@ public class PetGalleryController {
     }
 
     /**
-     * 根据ID获取相册图片
+     * 根据ID获取相册图片 - 公开接口
      */
     @GetMapping("/petGallery/{id}")
     @Operation(summary = "获取相册图片详情", description = "根据ID获取相册图片")
@@ -70,8 +72,9 @@ public class PetGalleryController {
     }
 
     /**
-     * 根据ID更新相册图片
+     * 根据ID更新相册图片 - 需要登录
      */
+    @SaCheckLogin
     @PutMapping("/petGallery/{id}")
     @Operation(summary = "更新相册图片", description = "根据ID更新相册图片")
     public ResponseEntity<String> updatePetGallery(@Parameter(description = "相册图片ID") @PathVariable Long id, @RequestBody PetGallery petGallery) {
@@ -91,8 +94,9 @@ public class PetGalleryController {
     }
 
     /**
-     * 根据ID删除相册图片
+     * 根据ID删除相册图片 - 需要登录
      */
+    @SaCheckLogin
     @DeleteMapping("/petGallery/{id}")
     @Operation(summary = "删除相册图片", description = "根据ID删除相册图片")
     public ResponseEntity<String> deletePetGallery(@Parameter(description = "相册图片ID") @PathVariable Long id) {
@@ -105,7 +109,7 @@ public class PetGalleryController {
     }
 
     /**
-     * 根据宠物ID获取相册列表
+     * 根据宠物ID获取相册列表 - 公开接口
      */
     @GetMapping("/petGallery/pet/{petId}")
     @Operation(summary = "根据宠物ID获取相册", description = "获取指定宠物的所有相册图片")

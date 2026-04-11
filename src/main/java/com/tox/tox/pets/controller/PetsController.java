@@ -1,5 +1,7 @@
 package com.tox.tox.pets.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tox.tox.pets.model.*;
@@ -48,8 +50,9 @@ public class PetsController {
     private IPetGalleryService petGalleryService;
 
     /**
-     * 添加宠物
+     * 添加宠物 - 需要登录
      */
+    @SaCheckLogin
     @PostMapping("/pets")
     @Operation(summary = "添加宠物", description = "创建一个新的宠物记录")
     @Transactional
@@ -75,7 +78,7 @@ public class PetsController {
     }
 
     /**
-     * 获取宠物列表
+     * 获取宠物列表 - 公开接口
      */
     @GetMapping("/pets")
     @Operation(summary = "获取宠物列表", description = "获取所有宠物列表")
@@ -109,7 +112,7 @@ public class PetsController {
 
     /**
      * (❗ 新增) GET /api/pets/leaderboard
-     * 获取点赞排行榜
+     * 获取点赞排行榜 - 公开接口
      */
     @GetMapping("/pets/leaderboard")
     @Operation(summary = "获取点赞排行榜", description = "获取点赞数最高的宠物列表")
@@ -121,7 +124,7 @@ public class PetsController {
     }
 
     /**
-     * 根据ID获取宠物信息
+     * 根据ID获取宠物信息 - 公开接口
      */
     @GetMapping("/pets/{id}")
     @Operation(summary = "获取宠物详情", description = "根据ID获取宠物详细信息")
@@ -136,7 +139,7 @@ public class PetsController {
 
         /**
 
-         * 根据ID获取宠物详细信息
+         * 根据ID获取宠物详细信息 - 公开接口
 
          */
 
@@ -156,14 +159,15 @@ public class PetsController {
 
         }
 
-    
+
 
         /**
 
-         * 根据ID更新宠物信息
+         * 根据ID更新宠物信息 - 需要登录
 
          */
 
+                @SaCheckLogin
                 @PutMapping("/pets/{id}")
                 @Operation(summary = "更新宠物信息", description = "根据ID更新宠物信息")
                 @Transactional
@@ -181,7 +185,7 @@ public class PetsController {
 
                         petRequest.setCreatedAt(existingPet.getCreatedAt());
 
-            
+
 
                         boolean updated = petsService.updateById(petRequest);
 
@@ -195,39 +199,39 @@ public class PetsController {
 
                             boolean isNewUrlProvided = newProfileImageUrl != null && !newProfileImageUrl.isEmpty() && !newProfileImageUrl.equals(oldProfileImageUrl);
 
-            
+
 
                                             if (isNewUrlProvided) {
 
-            
+
 
                                                 PetGallery gallery = new PetGallery();
 
-            
+
 
                                                 gallery.setPetId(id);
 
-            
+
 
                                                 gallery.setImageUrl(newProfileImageUrl);
 
-            
+
 
                                                 gallery.setPublicId(petRequest.getProfileImagePublicId());
 
-            
+
 
                                                 gallery.setDescription("Pet Avatar");
 
-            
+
 
                                                 gallery.setCreatedAt(OffsetDateTime.now());
 
-            
+
 
                                                 petGalleryService.save(gallery);
 
-            
+
 
                                             }
 
@@ -247,14 +251,15 @@ public class PetsController {
 
                 }
 
-    
+
 
         /**
 
-         * 根据ID删除宠物
+         * 根据ID删除宠物 - 需要登录
 
          */
 
+        @SaCheckLogin
         @DeleteMapping("/pets/{id}")
         @Operation(summary = "删除宠物", description = "根据ID删除宠物")
         public ResponseEntity<Void> deletePet(@Parameter(description = "宠物ID") @PathVariable Long id) {
@@ -273,14 +278,13 @@ public class PetsController {
 
         }
 
-    
+
 
         /**
 
-         * 根据物种查询宠物
+         * 根据物种查询宠物 - 公开接口
 
          */
-
         @GetMapping("/pets/species/{species}")
         @Operation(summary = "根据物种查询宠物", description = "根据宠物物种获取宠物列表")
         public ResponseEntity<List<Pets>> getPetsBySpecies(@Parameter(description = "宠物物种") @PathVariable String species) {
@@ -292,5 +296,3 @@ public class PetsController {
         }
 
     }
-
-    
