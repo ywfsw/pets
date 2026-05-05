@@ -3,8 +3,13 @@ package com.tox.tox.pets.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tox.tox.pets.model.DictItems;
 import com.tox.tox.pets.model.HealthEvents;
+import com.tox.tox.pets.model.Pets;
+import com.tox.tox.pets.model.dto.HealthEventsDTO;
+import com.tox.tox.pets.service.IDictItemsService;
 import com.tox.tox.pets.service.IHealthEventsService;
+import com.tox.tox.pets.service.IPetsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,9 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -32,6 +37,12 @@ public class HealthEventsController {
 
     @Autowired
     private IHealthEventsService healthEventsService;
+
+    @Autowired
+    private IPetsService petsService;
+
+    @Autowired
+    private IDictItemsService dictItemsService;
 
     /**
      * 添加健康事件 - 需要登录
@@ -151,12 +162,59 @@ public class HealthEventsController {
          */
 
         @GetMapping("/health-events/upcoming")
-        @Operation(summary = "获取即将到期的健康事件", description = "获取7天内即将到期的健康事件")
-        public ResponseEntity<List<HealthEvents>> getUpcomingHealthEvents() {
+        @Operation(summary = "获取即将到期的健康事件", description = "获取7天内即将到期的健康事件，包含宠物名称和事件类型标签")
+        public ResponseEntity<List<HealthEventsDTO>> getUpcomingHealthEvents() {
 
             List<HealthEvents> events = healthEventsService.listUpcoming();
 
-            return ResponseEntity.ok(events);
+            if (events.isEmpty()) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            // 批量查询宠物名称，避免 N+1 问题
+            Set<Long> petIds = events.stream()
+                    .map(HealthEvents::getPetId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            Map<Long, String> petNameMap = new HashMap<>();
+            if (!petIds.isEmpty()) {
+                List<Pets> petsList = petsService.listByIds(petIds);
+                for (Pets pet : petsList) {
+                    petNameMap.put(pet.getId(), pet.getName());
+                }
+            }
+
+            // 批量查询事件类型标签，避免 N+1 问题
+            Set<Long> eventTypeIds = events.stream()
+                    .map(HealthEvents::getEventTypeId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            Map<Long, String> eventTypeLabelMap = new HashMap<>();
+            if (!eventTypeIds.isEmpty()) {
+                List<DictItems> typeItems = dictItemsService.listByIds(eventTypeIds);
+                for (DictItems item : typeItems) {
+                    eventTypeLabelMap.put(item.getId(), item.getItemLabel());
+                }
+            }
+
+            // 转换为 DTO
+            List<HealthEventsDTO> dtos = new ArrayList<>();
+            for (HealthEvents event : events) {
+                HealthEventsDTO dto = new HealthEventsDTO();
+                dto.setId(event.getId());
+                dto.setPetId(event.getPetId());
+                dto.setEventTypeId(event.getEventTypeId());
+                dto.setEventDate(event.getEventDate());
+                dto.setNextDueDate(event.getNextDueDate());
+                dto.setNotes(event.getNotes());
+                dto.setStatus(event.getStatus());
+                dto.setCreatedAt(event.getCreatedAt());
+                dto.setPetName(petNameMap.getOrDefault(event.getPetId(), "未知宠物"));
+                dto.setEventTypeLabel(eventTypeLabelMap.getOrDefault(event.getEventTypeId(), "未知事件"));
+                dtos.add(dto);
+            }
+
+            return ResponseEntity.ok(dtos);
 
         }
 

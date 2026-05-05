@@ -39,6 +39,11 @@ public class HealthEventsDTO implements Serializable {
     private String eventTypeLabel;
 
     /**
+     * 宠物名称
+     */
+    private String petName;
+
+    /**
      * 事件实际发生日期
      */
     private LocalDate eventDate;
