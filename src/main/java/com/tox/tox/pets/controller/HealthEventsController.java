@@ -160,4 +160,19 @@ public class HealthEventsController {
 
         }
 
+        /**
+         * 标记健康事件为已完成 - 需要登录
+         */
+        @SaCheckLogin
+        @PatchMapping("/health-events/{id}/complete")
+        @Operation(summary = "标记事件为已完成", description = "将指定健康事件标记为已完成状态")
+        public ResponseEntity<String> completeHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id) {
+            boolean completed = healthEventsService.completeEvent(id);
+            if (completed) {
+                return ResponseEntity.ok("事件已标记为完成");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("事件不存在");
+            }
+        }
+
     }

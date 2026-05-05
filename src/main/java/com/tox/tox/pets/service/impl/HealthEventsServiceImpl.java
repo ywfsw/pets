@@ -37,9 +37,21 @@ public class HealthEventsServiceImpl extends ServiceImpl<HealthEventsMapper, Hea
     public List<HealthEvents> listUpcoming() {
         QueryWrapper<HealthEvents> queryWrapper = new QueryWrapper<>();
         queryWrapper.isNotNull("next_due_date");
+        queryWrapper.and(w -> w.eq("status", 0).or().isNull("status"));
         queryWrapper.le("next_due_date", java.time.LocalDate.now().plusDays(7));
         queryWrapper.orderByAsc("next_due_date");
         return this.list(queryWrapper);
+    }
+
+    @Override
+    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
+    public boolean completeEvent(Long id) {
+        HealthEvents event = this.getById(id);
+        if (event == null) {
+            return false;
+        }
+        event.setStatus(1);
+        return this.updateById(event);
     }
 
     @Override

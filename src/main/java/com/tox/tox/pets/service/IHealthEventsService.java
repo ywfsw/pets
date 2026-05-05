@@ -18,4 +18,6 @@ public interface IHealthEventsService extends IService<HealthEvents> {
     List<HealthEvents> listByPetId(Long petId);
 
     List<HealthEvents> listUpcoming();
+
+    boolean completeEvent(Long id);
 }

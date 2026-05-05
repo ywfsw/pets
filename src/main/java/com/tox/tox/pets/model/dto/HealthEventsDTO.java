@@ -54,6 +54,11 @@ public class HealthEventsDTO implements Serializable {
     private String notes;
 
     /**
+     * 事件状态: 0-待处理, 1-已完成
+     */
+    private Integer status;
+
+    /**
      * 记录创建时间
      */
     private OffsetDateTime createdAt;
