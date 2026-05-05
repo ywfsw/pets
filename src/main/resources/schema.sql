@@ -11,3 +11,6 @@ ALTER TABLE health_events ADD COLUMN IF NOT EXISTS status INTEGER DEFAULT 0;
 
 -- 添加宠物性别字段：male-公, female-母, 空值-未知
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+
+-- 添加宠物备注/简介字段
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS notes TEXT;

@@ -62,6 +62,11 @@ public class Pets implements Serializable {
     private String gender;
 
     /**
+     * 备注/简介
+     */
+    private String notes;
+
+    /**
      * 记录创建时间
      */
     private OffsetDateTime createdAt;
