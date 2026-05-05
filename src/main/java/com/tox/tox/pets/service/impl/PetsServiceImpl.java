@@ -69,15 +69,21 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      */
     @Override
 //    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
-    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name) {
+    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender) {
 
         // 1. (DB) 创建 MP 分页对象
         IPage<Pets> petPageConfig = new Page<>(pageNum, pageSize);
 
-        // 2. (DB) 构建查询条件，支持名称搜索
+        // 2. (DB) 构建查询条件，支持名称搜索、物种筛选、性别筛选
         QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
         if (name != null && !name.trim().isEmpty()) {
             queryWrapper.like("name", name.trim());
+        }
+        if (speciesId != null) {
+            queryWrapper.eq("species_id", speciesId);
+        }
+        if (gender != null && !gender.isEmpty()) {
+            queryWrapper.eq("gender", gender);
         }
 
         // 3. (DB) 执行 MP 分页查询

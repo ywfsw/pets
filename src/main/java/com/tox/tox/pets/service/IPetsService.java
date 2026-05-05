@@ -24,7 +24,7 @@ public interface IPetsService extends IService<Pets> {
      * @param pageSize 每页大小
      * @return DTO 的分页
      */
-    IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name);
+    IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender);
 
     /**
      * (❗ 新增) 获取排行榜
