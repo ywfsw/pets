@@ -49,6 +49,11 @@ public class PetDetailDTO implements Serializable {
      * 宠物的名字
      */
     private String name;
+
+    /**
+     * 性别：male-公, female-母, null-未知
+     */
+    private String gender;
     
     /**
      * 生日

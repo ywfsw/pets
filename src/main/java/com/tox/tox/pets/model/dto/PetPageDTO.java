@@ -23,6 +23,7 @@ public class PetPageDTO implements Serializable {
     private Long speciesId;
     private Long breedId;
     private LocalDate birthday;
+    private String gender;
     private long likeCount;
     private String profileImageUrl;
     private String profileImagePublicId;
@@ -37,6 +38,7 @@ public class PetPageDTO implements Serializable {
         this.speciesId = pet.getSpeciesId();
         this.breedId = pet.getBreedId();
         this.birthday = pet.getBirthday();
+        this.gender = pet.getGender();
         this.profileImageUrl = pet.getProfileImageUrl();
         this.profileImagePublicId = pet.getProfileImagePublicId();
     }

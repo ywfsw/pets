@@ -166,6 +166,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         detailDTO.setSpeciesId(pet.getSpeciesId());
         detailDTO.setBreedId(pet.getBreedId());
         detailDTO.setName(pet.getName());
+        detailDTO.setGender(pet.getGender());
         detailDTO.setBirthday(pet.getBirthday());
         detailDTO.setCreatedAt(pet.getCreatedAt());
         detailDTO.setAvatarUrl(pet.getProfileImageUrl());
