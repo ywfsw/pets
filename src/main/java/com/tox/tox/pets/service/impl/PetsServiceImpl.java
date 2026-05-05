@@ -69,14 +69,19 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      */
     @Override
 //    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
-    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize) {
+    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name) {
 
         // 1. (DB) 创建 MP 分页对象
         IPage<Pets> petPageConfig = new Page<>(pageNum, pageSize);
 
-        // 2. (DB) (❗) 执行 MP 分页查询
-        // (this.page() 是 ServiceImpl 提供的)
-        IPage<Pets> petPage = this.page(petPageConfig);
+        // 2. (DB) 构建查询条件，支持名称搜索
+        QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
+        if (name != null && !name.trim().isEmpty()) {
+            queryWrapper.like("name", name.trim());
+        }
+
+        // 3. (DB) 执行 MP 分页查询
+        IPage<Pets> petPage = this.page(petPageConfig, queryWrapper);
 
         List<Pets> pets = petPage.getRecords();
 
@@ -214,6 +219,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             eventDTO.setEventDate(event.getEventDate());
             eventDTO.setNextDueDate(event.getNextDueDate());
             eventDTO.setNotes(event.getNotes());
+            eventDTO.setStatus(event.getStatus());
             eventDTO.setCreatedAt(event.getCreatedAt());
 
             // 查询并设置事件类型中文标签

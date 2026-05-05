@@ -94,13 +94,13 @@ public class PetsController {
      * (完全匹配你的 API 文档)
      */
     @GetMapping("/pets/page")
-    @Operation(summary = "分页获取宠物列表", description = "分页获取宠物列表，包含点赞数")
+    @Operation(summary = "分页获取宠物列表", description = "分页获取宠物列表，支持名称搜索，包含点赞数")
     public ResponseEntity<IPage<PetPageDTO>> getPetPage(
-            // (❗) 接收 Query 参数, 匹配你的 API 文档
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String name
     ) {
-        IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize);
+        IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize, name);
         //根据likeCount排序
 //        page.setRecords(page.getRecords().stream()
 //                .sorted((p1, p2) -> Long.compare(p2.getLikeCount(), p1.getLikeCount()))
