@@ -175,4 +175,19 @@ public class HealthEventsController {
             }
         }
 
+        /**
+         * 撤销健康事件的已完成状态 - 需要登录
+         */
+        @SaCheckLogin
+        @PatchMapping("/health-events/{id}/uncomplete")
+        @Operation(summary = "撤销事件已完成", description = "将已完成的健康事件恢复为待处理状态")
+        public ResponseEntity<String> uncompleteHealthEvent(@Parameter(description = "健康事件ID") @PathVariable Long id) {
+            boolean uncompleted = healthEventsService.uncompleteEvent(id);
+            if (uncompleted) {
+                return ResponseEntity.ok("事件已恢复为待处理");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("事件不存在");
+            }
+        }
+
     }

@@ -20,4 +20,6 @@ public interface IHealthEventsService extends IService<HealthEvents> {
     List<HealthEvents> listUpcoming();
 
     boolean completeEvent(Long id);
+
+    boolean uncompleteEvent(Long id);
 }

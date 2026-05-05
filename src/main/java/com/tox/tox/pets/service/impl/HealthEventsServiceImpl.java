@@ -56,6 +56,17 @@ public class HealthEventsServiceImpl extends ServiceImpl<HealthEventsMapper, Hea
 
     @Override
     @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
+    public boolean uncompleteEvent(Long id) {
+        HealthEvents event = this.getById(id);
+        if (event == null) {
+            return false;
+        }
+        event.setStatus(0);
+        return this.updateById(event);
+    }
+
+    @Override
+    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
     public boolean save(HealthEvents entity) {
         return super.save(entity);
     }
