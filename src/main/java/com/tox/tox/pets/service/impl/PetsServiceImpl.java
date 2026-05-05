@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.mapper.PetsMapper;
+import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
 import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
@@ -58,6 +59,9 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
 
     @Autowired
     private IFeedingRecordService feedingRecordService;
+
+    @Autowired
+    private IPetGalleryService petGalleryService;
 
     @Autowired
     private ObjectMapper objectMapper; // 新增
@@ -252,6 +256,161 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         detailDTO.setFeedingRecords(feedingRecords);
 
         return detailDTO;
+    }
+
+    @Override
+    public DashboardSummaryDTO getDashboardSummary() {
+        DashboardSummaryDTO summary = new DashboardSummaryDTO();
+
+        // 1. 总计数据
+        summary.setTotalPets((int) this.count());
+
+        QueryWrapper<PetGallery> galleryCountQuery = new QueryWrapper<>();
+        summary.setTotalPhotos(petGalleryService.count(galleryCountQuery));
+
+        QueryWrapper<HealthEvents> pendingQuery = new QueryWrapper<>();
+        pendingQuery.and(w -> w.eq("status", 0).or().isNull("status"));
+        summary.setPendingEvents(healthEventsService.count(pendingQuery));
+
+        summary.setTotalWeightRecords(weightLogService.count(new QueryWrapper<>()));
+        summary.setTotalHealthEvents(healthEventsService.count(new QueryWrapper<>()));
+        summary.setTotalFeedings(feedingRecordService.count(new QueryWrapper<>()));
+
+        // 2. 批量加载最近活动数据
+        List<DashboardSummaryDTO.ActivityItem> activities = new ArrayList<>();
+
+        // 批量查询宠物名称
+        List<Pets> allPets = this.list();
+        Map<Long, String> petNameMap = allPets.stream()
+                .collect(Collectors.toMap(Pets::getId, Pets::getName, (a, b) -> a));
+
+        // 批量查询事件类型标签
+        List<DictItems> allEventTypes = dictItemsService.list();
+        Map<Long, String> eventTypeLabelMap = allEventTypes.stream()
+                .collect(Collectors.toMap(DictItems::getId, DictItems::getItemLabel, (a, b) -> a));
+
+        // 最近体重记录
+        QueryWrapper<WeightLog> recentWeightQuery = new QueryWrapper<>();
+        recentWeightQuery.orderByDesc("log_date");
+        recentWeightQuery.last("LIMIT 5");
+        List<WeightLog> recentWeights = weightLogService.list(recentWeightQuery);
+        for (WeightLog w : recentWeights) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("w-" + w.getId());
+            item.setType("weight");
+            item.setDate(w.getLogDate() != null ? w.getLogDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(w.getPetId(), "未知宠物"));
+            item.setTitle(w.getWeightKg() + " kg");
+            item.setIcon("⚖️");
+            activities.add(item);
+        }
+
+        // 最近健康事件
+        QueryWrapper<HealthEvents> recentEventQuery = new QueryWrapper<>();
+        recentEventQuery.orderByDesc("event_date");
+        recentEventQuery.last("LIMIT 5");
+        List<HealthEvents> recentEvents = healthEventsService.list(recentEventQuery);
+        for (HealthEvents e : recentEvents) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("h-" + e.getId());
+            item.setType("health");
+            item.setDate(e.getEventDate() != null ? e.getEventDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(e.getPetId(), "未知宠物"));
+            item.setTitle(eventTypeLabelMap.getOrDefault(e.getEventTypeId(), "健康事件"));
+            item.setIcon("🩺");
+            activities.add(item);
+        }
+
+        // 最近喂养记录
+        QueryWrapper<FeedingRecord> recentFeedingQuery = new QueryWrapper<>();
+        recentFeedingQuery.orderByDesc("feed_time");
+        recentFeedingQuery.last("LIMIT 5");
+        List<FeedingRecord> recentFeedings = feedingRecordService.list(recentFeedingQuery);
+        for (FeedingRecord f : recentFeedings) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("f-" + f.getId());
+            item.setType("feeding");
+            item.setDate(f.getFeedTime() != null ? f.getFeedTime().toLocalDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(f.getPetId(), "未知宠物"));
+            String amountStr = f.getAmountGrams() != null ? f.getAmountGrams() + "g" : "";
+            String title = f.getFoodType() != null && !f.getFoodType().isEmpty()
+                    ? f.getFoodType() + (amountStr.isEmpty() ? "" : " · " + amountStr)
+                    : "喂食";
+            item.setTitle(title);
+            item.setIcon("🍽️");
+            activities.add(item);
+        }
+
+        // 最近照片
+        QueryWrapper<PetGallery> recentPhotoQuery = new QueryWrapper<>();
+        recentPhotoQuery.orderByDesc("created_at");
+        recentPhotoQuery.last("LIMIT 5");
+        List<PetGallery> recentPhotos = petGalleryService.list(recentPhotoQuery);
+        for (PetGallery p : recentPhotos) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("p-" + p.getId());
+            item.setType("photo");
+            item.setDate(p.getCreatedAt() != null ? p.getCreatedAt().toLocalDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(p.getPetId(), "未知宠物"));
+            item.setTitle(p.getDescription() != null && !p.getDescription().isEmpty() ? p.getDescription() : "上传照片");
+            item.setIcon("📷");
+            activities.add(item);
+        }
+
+        // 按日期降序排序，取最近 10 条
+        activities.sort((a, b) -> {
+            if (a.getDate() == null && b.getDate() == null) return 0;
+            if (a.getDate() == null) return 1;
+            if (b.getDate() == null) return -1;
+            return b.getDate().compareTo(a.getDate());
+        });
+        if (activities.size() > 10) {
+            activities = new ArrayList<>(activities.subList(0, 10));
+        }
+
+        summary.setRecentActivities(activities);
+
+        // 3. 宠物速览数据
+        List<DashboardSummaryDTO.PetOverviewItem> petOverviews = new ArrayList<>();
+        if (!allPets.isEmpty()) {
+            // 物种和品种名称映射
+            Map<Long, String> dictLabelMap = allEventTypes.stream()
+                    .collect(Collectors.toMap(DictItems::getId, DictItems::getItemLabel, (a, b) -> a));
+
+            // 每只宠物的待处理事件数量
+            QueryWrapper<HealthEvents> allPendingQuery = new QueryWrapper<>();
+            allPendingQuery.and(w -> w.eq("status", 0).or().isNull("status"));
+            allPendingQuery.select("pet_id");
+            List<HealthEvents> allPending = healthEventsService.list(allPendingQuery);
+            Map<Long, Long> petPendingCountMap = allPending.stream()
+                    .collect(Collectors.groupingBy(HealthEvents::getPetId, Collectors.counting()));
+
+            // 每只宠物的最新体重
+            QueryWrapper<WeightLog> allWeightQuery = new QueryWrapper<>();
+            allWeightQuery.orderByDesc("log_date");
+            allWeightQuery.select("pet_id", "weight_kg", "log_date");
+            List<WeightLog> allWeights = weightLogService.list(allWeightQuery);
+            Map<Long, String> petLatestWeightMap = new java.util.HashMap<>();
+            for (WeightLog w : allWeights) {
+                petLatestWeightMap.putIfAbsent(w.getPetId(), w.getWeightKg() + " kg");
+            }
+
+            for (Pets pet : allPets) {
+                DashboardSummaryDTO.PetOverviewItem overview = new DashboardSummaryDTO.PetOverviewItem();
+                overview.setId(pet.getId());
+                overview.setName(pet.getName());
+                overview.setGender(pet.getGender());
+                overview.setBirthday(pet.getBirthday() != null ? pet.getBirthday().toString() : null);
+                overview.setSpeciesName(dictLabelMap.getOrDefault(pet.getSpeciesId(), null));
+                overview.setBreedName(dictLabelMap.getOrDefault(pet.getBreedId(), null));
+                overview.setLatestWeight(petLatestWeightMap.get(pet.getId()));
+                overview.setPendingEventsCount(petPendingCountMap.getOrDefault(pet.getId(), 0L));
+                petOverviews.add(overview);
+            }
+        }
+        summary.setPetOverviews(petOverviews);
+
+        return summary;
     }
 
     @Override

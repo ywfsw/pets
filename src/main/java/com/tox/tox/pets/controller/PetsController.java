@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tox.tox.pets.model.*;
+import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.*;
 import com.tox.tox.pets.service.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,6 +111,16 @@ public class PetsController {
         // (❗) IPage<...> 序列化后的 JSON 结构
         // (完美匹配你 API 文档里的 "records", "total", "size", "current")
         return ResponseEntity.ok(page);
+    }
+
+    /**
+     * 获取仪表盘概览数据 - 公开接口
+     */
+    @GetMapping("/dashboard/summary")
+    @Operation(summary = "获取仪表盘概览", description = "获取宠物数量、待处理事件、最近活动等汇总数据")
+    public ResponseEntity<DashboardSummaryDTO> getDashboardSummary() {
+        DashboardSummaryDTO summary = petsService.getDashboardSummary();
+        return ResponseEntity.ok(summary);
     }
 
     /**

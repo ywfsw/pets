@@ -5,6 +5,7 @@ import com.tox.tox.pets.model.Pets;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
+import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
 
 import java.util.List;
@@ -36,4 +37,6 @@ public interface IPetsService extends IService<Pets> {
     PetDetailDTO getPetDetailById(Long id);
 
     List<Pets> getPetsBySpecies(String species);
+
+    DashboardSummaryDTO getDashboardSummary();
 }
