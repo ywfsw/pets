@@ -14,3 +14,14 @@ ALTER TABLE pets ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
 
 -- 添加宠物备注/简介字段
 ALTER TABLE pets ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- 喂养记录表
+CREATE TABLE IF NOT EXISTS feeding_records (
+    id SERIAL PRIMARY KEY,
+    pet_id BIGINT NOT NULL,
+    feed_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    food_type VARCHAR(100),
+    amount_grams INTEGER,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

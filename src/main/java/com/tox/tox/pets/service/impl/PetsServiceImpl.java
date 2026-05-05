@@ -57,6 +57,9 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     private IHealthEventsService healthEventsService;
 
     @Autowired
+    private IFeedingRecordService feedingRecordService;
+
+    @Autowired
     private ObjectMapper objectMapper; // 新增
 
     @Autowired
@@ -240,6 +243,13 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         }
 
         detailDTO.setHealthEvents(healthEventsDTOs);
+
+        // 7. 查询喂养记录
+        QueryWrapper<FeedingRecord> feedingQuery = new QueryWrapper<>();
+        feedingQuery.eq("pet_id", id);
+        feedingQuery.orderByDesc("feed_time");
+        List<FeedingRecord> feedingRecords = feedingRecordService.list(feedingQuery);
+        detailDTO.setFeedingRecords(feedingRecords);
 
         return detailDTO;
     }
