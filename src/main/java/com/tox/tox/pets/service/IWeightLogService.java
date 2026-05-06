@@ -1,5 +1,6 @@
 package com.tox.tox.pets.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.WeightLog;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -18,4 +19,6 @@ public interface IWeightLogService extends IService<WeightLog> {
     List<WeightLog> listByPetId(Long petId);
 
     WeightLog getLatestByPetId(Long petId);
+
+    Page<WeightLog> pageByPetId(Integer pageNum, Integer pageSize, Long petId);
 }

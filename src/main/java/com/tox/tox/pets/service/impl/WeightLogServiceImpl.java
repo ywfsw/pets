@@ -1,6 +1,7 @@
 package com.tox.tox.pets.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.WeightLog;
 import com.tox.tox.pets.mapper.WeightLogMapper;
 import com.tox.tox.pets.service.IWeightLogService;
@@ -41,6 +42,17 @@ public class WeightLogServiceImpl extends ServiceImpl<WeightLogMapper, WeightLog
         queryWrapper.last("LIMIT 1");
         List<WeightLog> logs = this.list(queryWrapper);
         return logs.isEmpty() ? null : logs.get(0);
+    }
+
+    @Override
+    public Page<WeightLog> pageByPetId(Integer pageNum, Integer pageSize, Long petId) {
+        Page<WeightLog> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<WeightLog> queryWrapper = new QueryWrapper<>();
+        if (petId != null) {
+            queryWrapper.eq("pet_id", petId);
+        }
+        queryWrapper.orderByDesc("log_date");
+        return this.page(page, queryWrapper);
     }
 
     @Override

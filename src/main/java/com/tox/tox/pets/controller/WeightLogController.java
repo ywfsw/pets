@@ -61,15 +61,15 @@ public class WeightLogController {
     }
 
     /**
-     * 分页查询体重记录 - 公开接口
+     * 分页查询体重记录 - 公开接口，支持按宠物ID筛选
      */
     @GetMapping("/page")
-    @Operation(summary = "分页查询体重记录", description = "分页获取体重记录列表")
+    @Operation(summary = "分页查询体重记录", description = "分页获取体重记录列表，支持按宠物ID筛选")
     public ResponseEntity<Page<WeightLog>> pageWeightLogs(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize) {
-        Page<WeightLog> page = new Page<>(pageNum, pageSize);
-        Page<WeightLog> resultPage = weightLogService.page(page);
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "20") Integer pageSize,
+            @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId) {
+        Page<WeightLog> resultPage = weightLogService.pageByPetId(pageNum, pageSize, petId);
         return ResponseEntity.ok(resultPage);
     }
 
