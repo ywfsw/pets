@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
 import org.springframework.data.redis.core.ZSetOperations;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 
 
@@ -409,6 +410,33 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             }
         }
         summary.setPetOverviews(petOverviews);
+
+        // 4. 近期喂养统计（最近 30 天按食物类型分组）
+        OffsetDateTime thirtyDaysAgo = OffsetDateTime.now().minusDays(30);
+        QueryWrapper<FeedingRecord> feedingStatsQuery = new QueryWrapper<>();
+        feedingStatsQuery.ge("feed_time", thirtyDaysAgo);
+        feedingStatsQuery.select("food_type", "amount_grams");
+        List<FeedingRecord> recentFeedingRecords = feedingRecordService.list(feedingStatsQuery);
+
+        Map<String, List<FeedingRecord>> groupedByFoodType = recentFeedingRecords.stream()
+                .filter(f -> f.getFoodType() != null && !f.getFoodType().isEmpty())
+                .collect(Collectors.groupingBy(FeedingRecord::getFoodType));
+
+        List<DashboardSummaryDTO.FeedingStatItem> feedingStats = new ArrayList<>();
+        for (Map.Entry<String, List<FeedingRecord>> entry : groupedByFoodType.entrySet()) {
+            DashboardSummaryDTO.FeedingStatItem stat = new DashboardSummaryDTO.FeedingStatItem();
+            stat.setFoodType(entry.getKey());
+            stat.setCount(entry.getValue().size());
+            double avg = entry.getValue().stream()
+                    .filter(f -> f.getAmountGrams() != null)
+                    .mapToInt(FeedingRecord::getAmountGrams)
+                    .average()
+                    .orElse(0);
+            stat.setAvgAmount(avg > 0 ? (int) Math.round(avg) : null);
+            feedingStats.add(stat);
+        }
+        feedingStats.sort((a, b) -> Long.compare(b.getCount(), a.getCount()));
+        summary.setFeedingStats(feedingStats);
 
         return summary;
     }

@@ -17,6 +17,7 @@ public class DashboardSummaryDTO {
     private long totalFeedings;
     private List<ActivityItem> recentActivities;
     private List<PetOverviewItem> petOverviews;
+    private List<FeedingStatItem> feedingStats;
 
     @Data
     public static class ActivityItem {
@@ -38,5 +39,12 @@ public class DashboardSummaryDTO {
         private String breedName;
         private String latestWeight;
         private long pendingEventsCount;
+    }
+
+    @Data
+    public static class FeedingStatItem {
+        private String foodType;
+        private long count;
+        private Integer avgAmount;
     }
 }
