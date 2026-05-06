@@ -66,19 +66,19 @@ public class HealthEventsServiceImpl extends ServiceImpl<HealthEventsMapper, Hea
     }
 
     @Override
-    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
+    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming", "pets_detail_by_id"}, allEntries = true)
     public boolean save(HealthEvents entity) {
         return super.save(entity);
     }
 
     @Override
-    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
+    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming", "pets_detail_by_id"}, allEntries = true)
     public boolean updateById(HealthEvents entity) {
         return super.updateById(entity);
     }
 
     @Override
-    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming"}, allEntries = true)
+    @CacheEvict(value = {"health_events_by_pet", "health_events_upcoming", "pets_detail_by_id"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
     }

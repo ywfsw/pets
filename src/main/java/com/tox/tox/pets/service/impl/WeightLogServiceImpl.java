@@ -44,19 +44,19 @@ public class WeightLogServiceImpl extends ServiceImpl<WeightLogMapper, WeightLog
     }
 
     @Override
-    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet"}, allEntries = true)
+    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean save(WeightLog entity) {
         return super.save(entity);
     }
 
     @Override
-    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet"}, allEntries = true)
+    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean updateById(WeightLog entity) {
         return super.updateById(entity);
     }
 
     @Override
-    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet"}, allEntries = true)
+    @CacheEvict(value = {"weight_log_by_pet", "weight_log_latest_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
     }

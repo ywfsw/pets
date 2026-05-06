@@ -32,19 +32,19 @@ public class PetGalleryServiceImpl extends ServiceImpl<PetGalleryMapper, PetGall
     }
 
     @Override
-    @CacheEvict(value = "pet_gallery_by_pet", allEntries = true)
+    @CacheEvict(value = {"pet_gallery_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean save(PetGallery entity) {
         return super.save(entity);
     }
 
     @Override
-    @CacheEvict(value = "pet_gallery_by_pet", allEntries = true)
+    @CacheEvict(value = {"pet_gallery_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean updateById(PetGallery entity) {
         return super.updateById(entity);
     }
 
     @Override
-    @CacheEvict(value = "pet_gallery_by_pet", allEntries = true)
+    @CacheEvict(value = {"pet_gallery_by_pet", "pets_detail_by_id"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
     }
