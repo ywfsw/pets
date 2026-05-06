@@ -1,6 +1,8 @@
 package com.tox.tox.pets.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.HealthEvents;
+import com.tox.tox.pets.model.dto.HealthEventsStatsDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -22,4 +24,8 @@ public interface IHealthEventsService extends IService<HealthEvents> {
     boolean completeEvent(Long id);
 
     boolean uncompleteEvent(Long id);
+
+    Page<HealthEvents> pageByPetId(Integer pageNum, Integer pageSize, Long petId, Integer status);
+
+    HealthEventsStatsDTO getHealthEventsStats(Long petId);
 }

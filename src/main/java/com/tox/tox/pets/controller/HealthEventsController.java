@@ -7,6 +7,7 @@ import com.tox.tox.pets.model.DictItems;
 import com.tox.tox.pets.model.HealthEvents;
 import com.tox.tox.pets.model.Pets;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
+import com.tox.tox.pets.model.dto.HealthEventsStatsDTO;
 import com.tox.tox.pets.service.IDictItemsService;
 import com.tox.tox.pets.service.IHealthEventsService;
 import com.tox.tox.pets.service.IPetsService;
@@ -72,16 +73,66 @@ public class HealthEventsController {
     }
 
     /**
-     * 分页查询健康事件 - 公开接口
+     * 分页查询健康事件（带宠物名称和事件类型标签）- 公开接口
      */
     @GetMapping("/health-events/page")
-    @Operation(summary = "分页查询健康事件", description = "分页获取健康事件列表")
-    public ResponseEntity<Page<HealthEvents>> pageHealthEvents(
+    @Operation(summary = "分页查询健康事件", description = "分页获取健康事件列表，支持按宠物ID和状态筛选，返回带宠物名称和事件类型标签的DTO")
+    public ResponseEntity<Map<String, Object>> pageHealthEvents(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
-            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize) {
-        Page<HealthEvents> page = new Page<>(pageNum, pageSize);
-        Page<HealthEvents> resultPage = healthEventsService.page(page);
-        return ResponseEntity.ok(resultPage);
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "20") Integer pageSize,
+            @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId,
+            @Parameter(description = "状态: 0-待处理, 1-已完成") @RequestParam(required = false) Integer status) {
+        Page<HealthEvents> resultPage = healthEventsService.pageByPetId(pageNum, pageSize, petId, status);
+
+        // 批量查询宠物名称
+        Set<Long> petIds = resultPage.getRecords().stream()
+                .map(HealthEvents::getPetId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> petNameMap = new HashMap<>();
+        if (!petIds.isEmpty()) {
+            List<Pets> petsList = petsService.listByIds(petIds);
+            for (Pets pet : petsList) {
+                petNameMap.put(pet.getId(), pet.getName());
+            }
+        }
+
+        // 批量查询事件类型标签
+        Set<Long> eventTypeIds = resultPage.getRecords().stream()
+                .map(HealthEvents::getEventTypeId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> eventTypeLabelMap = new HashMap<>();
+        if (!eventTypeIds.isEmpty()) {
+            List<DictItems> typeItems = dictItemsService.listByIds(eventTypeIds);
+            for (DictItems item : typeItems) {
+                eventTypeLabelMap.put(item.getId(), item.getItemLabel());
+            }
+        }
+
+        // 转换为 DTO
+        List<HealthEventsDTO> dtos = new ArrayList<>();
+        for (HealthEvents event : resultPage.getRecords()) {
+            HealthEventsDTO dto = new HealthEventsDTO();
+            dto.setId(event.getId());
+            dto.setPetId(event.getPetId());
+            dto.setEventTypeId(event.getEventTypeId());
+            dto.setEventDate(event.getEventDate());
+            dto.setNextDueDate(event.getNextDueDate());
+            dto.setNotes(event.getNotes());
+            dto.setStatus(event.getStatus());
+            dto.setCreatedAt(event.getCreatedAt());
+            dto.setPetName(petNameMap.getOrDefault(event.getPetId(), "未知宠物"));
+            dto.setEventTypeLabel(eventTypeLabelMap.getOrDefault(event.getEventTypeId(), "未知事件"));
+            dtos.add(dto);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("records", dtos);
+        response.put("total", resultPage.getTotal());
+        response.put("pageNum", resultPage.getCurrent());
+        response.put("pageSize", resultPage.getSize());
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -246,6 +297,17 @@ public class HealthEventsController {
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("事件不存在");
             }
+        }
+
+        /**
+         * 获取健康事件统计 - 公开接口
+         */
+        @GetMapping("/health-events/stats")
+        @Operation(summary = "获取健康事件统计", description = "获取健康事件的状态统计和事件类型分布，支持按宠物ID筛选")
+        public ResponseEntity<HealthEventsStatsDTO> getHealthEventsStats(
+                @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId) {
+            HealthEventsStatsDTO stats = healthEventsService.getHealthEventsStats(petId);
+            return ResponseEntity.ok(stats);
         }
 
     }
