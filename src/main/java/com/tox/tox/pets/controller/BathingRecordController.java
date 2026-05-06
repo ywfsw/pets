@@ -3,6 +3,7 @@ package com.tox.tox.pets.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.BathingRecord;
+import com.tox.tox.pets.model.dto.BathingStatsDTO;
 import com.tox.tox.pets.service.IBathingRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +43,15 @@ public class BathingRecordController {
             @Parameter(description = "宠物ID") @PathVariable Long petId) {
         List<BathingRecord> records = bathingRecordService.listByPetId(petId);
         return ResponseEntity.ok(records);
+    }
+
+    @GetMapping("/bathing-records/stats")
+    @Operation(summary = "获取洗澡美容统计数据", description = "按服务类型聚合的统计，支持按宠物筛选和时间范围")
+    public ResponseEntity<BathingStatsDTO> getBathingStats(
+            @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId,
+            @Parameter(description = "统计天数，如30、90，默认30") @RequestParam(defaultValue = "30") Integer days) {
+        BathingStatsDTO stats = bathingRecordService.getBathingStats(petId, days);
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/bathing-records/page")

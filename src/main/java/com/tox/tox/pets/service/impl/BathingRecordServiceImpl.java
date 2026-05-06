@@ -5,13 +5,16 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tox.tox.pets.mapper.BathingRecordMapper;
 import com.tox.tox.pets.model.BathingRecord;
+import com.tox.tox.pets.model.dto.BathingStatsDTO;
 import com.tox.tox.pets.service.IBathingRecordService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
-import java.util.List;
+import java.time.OffsetDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BathingRecordServiceImpl extends ServiceImpl<BathingRecordMapper, BathingRecord> implements IBathingRecordService {
@@ -34,6 +37,39 @@ public class BathingRecordServiceImpl extends ServiceImpl<BathingRecordMapper, B
         }
         qw.orderByDesc("bath_time");
         return this.page(page, qw);
+    }
+
+    @Override
+    public BathingStatsDTO getBathingStats(Long petId, Integer days) {
+        QueryWrapper<BathingRecord> qw = new QueryWrapper<>();
+        if (petId != null) {
+            qw.eq("pet_id", petId);
+        }
+        if (days != null && days > 0) {
+            qw.ge("bath_time", OffsetDateTime.now().minusDays(days));
+        }
+        List<BathingRecord> records = this.list(qw);
+
+        Map<String, Long> typeCountMap = records.stream()
+                .filter(r -> r.getServiceType() != null && !r.getServiceType().isBlank())
+                .collect(Collectors.groupingBy(BathingRecord::getServiceType, Collectors.counting()));
+
+        List<BathingStatsDTO.TypeStat> typeStats = typeCountMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .map(e -> {
+                    BathingStatsDTO.TypeStat s = new BathingStatsDTO.TypeStat();
+                    s.setServiceType(e.getKey());
+                    s.setCount(e.getValue().intValue());
+                    return s;
+                })
+                .collect(Collectors.toList());
+
+        BathingStatsDTO dto = new BathingStatsDTO();
+        dto.setTotalRecords(records.size());
+        dto.setUniqueTypes(typeCountMap.size());
+        dto.setTopType(typeStats.isEmpty() ? null : typeStats.get(0).getServiceType());
+        dto.setTypeStats(typeStats);
+        return dto;
     }
 
     @Override
