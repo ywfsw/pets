@@ -1,6 +1,7 @@
 package com.tox.tox.pets.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.FeedingRecord;
 import com.tox.tox.pets.mapper.FeedingRecordMapper;
 import com.tox.tox.pets.service.IFeedingRecordService;
@@ -22,6 +23,17 @@ public class FeedingRecordServiceImpl extends ServiceImpl<FeedingRecordMapper, F
         queryWrapper.eq("pet_id", petId);
         queryWrapper.orderByDesc("feed_time");
         return this.list(queryWrapper);
+    }
+
+    @Override
+    public Page<FeedingRecord> pageByPetId(Integer pageNum, Integer pageSize, Long petId) {
+        Page<FeedingRecord> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<FeedingRecord> queryWrapper = new QueryWrapper<>();
+        if (petId != null) {
+            queryWrapper.eq("pet_id", petId);
+        }
+        queryWrapper.orderByDesc("feed_time");
+        return this.page(page, queryWrapper);
     }
 
     @Override

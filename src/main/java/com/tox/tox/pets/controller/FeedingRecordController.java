@@ -1,6 +1,7 @@
 package com.tox.tox.pets.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.FeedingRecord;
 import com.tox.tox.pets.service.IFeedingRecordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,16 @@ public class FeedingRecordController {
             @Parameter(description = "宠物ID") @PathVariable Long petId) {
         List<FeedingRecord> records = feedingRecordService.listByPetId(petId);
         return ResponseEntity.ok(records);
+    }
+
+    @GetMapping("/feeding-records/page")
+    @Operation(summary = "分页查询喂养记录", description = "分页获取喂养记录列表，支持按宠物ID筛选")
+    public ResponseEntity<Page<FeedingRecord>> pageFeedingRecords(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "20") Integer pageSize,
+            @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId) {
+        Page<FeedingRecord> resultPage = feedingRecordService.pageByPetId(pageNum, pageSize, petId);
+        return ResponseEntity.ok(resultPage);
     }
 
     @SaCheckLogin
