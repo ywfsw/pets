@@ -84,7 +84,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      */
     @Override
 //    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
-    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender, Integer ageMinMonths, Integer ageMaxMonths) {
+    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender, Integer ageMinMonths, Integer ageMaxMonths, String sort) {
 
         // 1. (DB) 创建 MP 分页对象
         IPage<Pets> petPageConfig = new Page<>(pageNum, pageSize);
@@ -101,8 +101,6 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             queryWrapper.eq("gender", gender);
         }
         // 年龄范围筛选：通过 birthday 列计算，ageMaxMonths 对应最小生日（最年轻），ageMinMonths 对应最大生日（最年长）
-        // birthday >= NOW() - interval 'ageMaxMonths months'  → 生日在这个日期之后（更年轻）
-        // birthday <= NOW() - interval 'ageMinMonths months'  → 生日在这个日期之前（更年长）
         if (ageMaxMonths != null) {
             LocalDate minBirthday = LocalDate.now().minusMonths(ageMaxMonths);
             queryWrapper.ge("birthday", minBirthday);
@@ -110,6 +108,34 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         if (ageMinMonths != null) {
             LocalDate maxBirthday = LocalDate.now().minusMonths(ageMinMonths);
             queryWrapper.le("birthday", maxBirthday);
+        }
+
+        // 2.5 排序：DB 可排序的字段直接在查询时排序，likes 需要 Redis 后排序
+        boolean sortByLikes = false;
+        if (sort != null && !sort.isEmpty()) {
+            switch (sort) {
+                case "name_asc":
+                    queryWrapper.orderByAsc("name");
+                    break;
+                case "age_asc":
+                    queryWrapper.orderByAsc("birthday");
+                    break;
+                case "age_desc":
+                    queryWrapper.orderByDesc("birthday");
+                    break;
+                case "newest":
+                    queryWrapper.orderByDesc("id");
+                    break;
+                case "likes_desc":
+                    sortByLikes = true;
+                    queryWrapper.orderByDesc("id");
+                    break;
+                default:
+                    queryWrapper.orderByAsc("id");
+                    break;
+            }
+        } else {
+            queryWrapper.orderByAsc("id");
         }
 
         // 3. (DB) 执行 MP 分页查询
@@ -132,14 +158,18 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
 
         // 5. (Java) 组装 DTO 列表
         List<PetPageDTO> dtos = pets.stream().map(pet -> {
-            PetPageDTO dto = new PetPageDTO(pet); // (使用我们上次定义的 PetPageDTO)
+            PetPageDTO dto = new PetPageDTO(pet);
             long likeCount = likeCountsMap.getOrDefault(pet.getId(), 0L);
             dto.setLikeCount(likeCount);
             return dto;
         }).collect(Collectors.toList());
 
-        // 6. (Java) (❗) 创建 DTO 分页结果
-        // (重用 'petPage' 的分页元数据, 但用 'dtos' 替换 'records')
+        // 5.5 按点赞数排序（当前页内，Redis 数据在 Java 层排序）
+        if (sortByLikes) {
+            dtos.sort((a, b) -> Long.compare(b.getLikeCount(), a.getLikeCount()));
+        }
+
+        // 6. (Java) 创建 DTO 分页结果
         IPage<PetPageDTO> dtoPage = new Page<>(petPage.getCurrent(), petPage.getSize(), petPage.getTotal());
         dtoPage.setRecords(dtos);
 
