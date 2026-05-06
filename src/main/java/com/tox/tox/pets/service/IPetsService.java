@@ -38,4 +38,6 @@ public interface IPetsService extends IService<Pets> {
     DashboardSummaryDTO getDashboardSummary();
 
     HealthReportDTO getHealthReport(Long petId, int months);
+
+    List<NotificationItemDTO> getNotificationSummary();
 }

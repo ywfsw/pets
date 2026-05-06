@@ -8,6 +8,7 @@ import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.*;
 import com.tox.tox.pets.service.*;
+import com.tox.tox.pets.model.dto.NotificationItemDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -327,6 +328,17 @@ public class PetsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.ok(report);
+    }
+
+    /**
+     * 获取综合通知汇总 - 公开接口
+     * 包含健康事件提醒、用药提醒、喂养提醒、洗澡美容提醒
+     */
+    @GetMapping("/notifications/summary")
+    @Operation(summary = "获取通知汇总", description = "获取综合通知列表，包含健康事件、用药、喂养、洗澡美容等各类提醒")
+    public ResponseEntity<List<NotificationItemDTO>> getNotificationSummary() {
+        List<NotificationItemDTO> summary = petsService.getNotificationSummary();
+        return ResponseEntity.ok(summary);
     }
 
     }
