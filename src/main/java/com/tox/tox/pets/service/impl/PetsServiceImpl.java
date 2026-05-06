@@ -65,6 +65,9 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     private IBathingRecordService bathingRecordService;
 
     @Autowired
+    private IMedicationRecordService medicationRecordService;
+
+    @Autowired
     private IPetGalleryService petGalleryService;
 
     @Autowired
@@ -266,7 +269,14 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         List<BathingRecord> bathingRecords = bathingRecordService.list(bathingQuery);
         detailDTO.setBathingRecords(bathingRecords);
 
-        // 9. 查询点赞数
+        // 9. 查询用药记录
+        QueryWrapper<MedicationRecord> medicationQuery = new QueryWrapper<>();
+        medicationQuery.eq("pet_id", id);
+        medicationQuery.orderByDesc("start_date");
+        List<MedicationRecord> medicationRecords = medicationRecordService.list(medicationQuery);
+        detailDTO.setMedicationRecords(medicationRecords);
+
+        // 10. 查询点赞数
         detailDTO.setLikeCount(likingService.getPetLikeCount(id));
 
         return detailDTO;

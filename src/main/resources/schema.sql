@@ -35,3 +35,17 @@ CREATE TABLE IF NOT EXISTS bathing_records (
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 用药记录表
+CREATE TABLE IF NOT EXISTS medication_records (
+    id SERIAL PRIMARY KEY,
+    pet_id BIGINT NOT NULL,
+    medication_name VARCHAR(200) NOT NULL,
+    medication_type VARCHAR(50),
+    dosage VARCHAR(100),
+    frequency VARCHAR(100),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
