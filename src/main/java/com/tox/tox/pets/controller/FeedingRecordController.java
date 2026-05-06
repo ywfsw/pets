@@ -3,6 +3,7 @@ package com.tox.tox.pets.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.FeedingRecord;
+import com.tox.tox.pets.model.dto.FeedingStatsDTO;
 import com.tox.tox.pets.service.IFeedingRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +43,15 @@ public class FeedingRecordController {
             @Parameter(description = "宠物ID") @PathVariable Long petId) {
         List<FeedingRecord> records = feedingRecordService.listByPetId(petId);
         return ResponseEntity.ok(records);
+    }
+
+    @GetMapping("/feeding-records/stats")
+    @Operation(summary = "获取喂养统计数据", description = "按日期聚合的喂养频次和食量统计，支持按宠物筛选和时间范围")
+    public ResponseEntity<FeedingStatsDTO> getFeedingStats(
+            @Parameter(description = "宠物ID") @RequestParam(required = false) Long petId,
+            @Parameter(description = "统计天数，如30、90，默认30") @RequestParam(defaultValue = "30") Integer days) {
+        FeedingStatsDTO stats = feedingRecordService.getFeedingStats(petId, days);
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/feeding-records/page")
