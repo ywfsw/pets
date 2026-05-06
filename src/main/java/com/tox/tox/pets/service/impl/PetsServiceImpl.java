@@ -299,6 +299,8 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         summary.setTotalWeightRecords(weightLogService.count(new QueryWrapper<>()));
         summary.setTotalHealthEvents(healthEventsService.count(new QueryWrapper<>()));
         summary.setTotalFeedings(feedingRecordService.count(new QueryWrapper<>()));
+        summary.setTotalMedications(medicationRecordService.count(new QueryWrapper<>()));
+        summary.setTotalBathingRecords(bathingRecordService.count(new QueryWrapper<>()));
 
         // 2. 批量加载最近活动数据
         List<DashboardSummaryDTO.ActivityItem> activities = new ArrayList<>();
@@ -378,6 +380,39 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             item.setPetName(petNameMap.getOrDefault(p.getPetId(), "未知宠物"));
             item.setTitle(p.getDescription() != null && !p.getDescription().isEmpty() ? p.getDescription() : "上传照片");
             item.setIcon("📷");
+            activities.add(item);
+        }
+
+        // 最近用药记录
+        QueryWrapper<MedicationRecord> recentMedQuery = new QueryWrapper<>();
+        recentMedQuery.orderByDesc("start_date");
+        recentMedQuery.last("LIMIT 5");
+        List<MedicationRecord> recentMeds = medicationRecordService.list(recentMedQuery);
+        for (MedicationRecord m : recentMeds) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("m-" + m.getId());
+            item.setType("medication");
+            item.setDate(m.getStartDate() != null ? m.getStartDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(m.getPetId(), "未知宠物"));
+            String dosage = m.getDosage() != null && !m.getDosage().isEmpty() ? " · " + m.getDosage() : "";
+            item.setTitle(m.getMedicationName() + dosage);
+            item.setIcon("💊");
+            activities.add(item);
+        }
+
+        // 最近洗澡美容记录
+        QueryWrapper<BathingRecord> recentBathQuery = new QueryWrapper<>();
+        recentBathQuery.orderByDesc("bath_time");
+        recentBathQuery.last("LIMIT 5");
+        List<BathingRecord> recentBaths = bathingRecordService.list(recentBathQuery);
+        for (BathingRecord b : recentBaths) {
+            DashboardSummaryDTO.ActivityItem item = new DashboardSummaryDTO.ActivityItem();
+            item.setId("b-" + b.getId());
+            item.setType("bathing");
+            item.setDate(b.getBathTime() != null ? b.getBathTime().toLocalDate().toString() : null);
+            item.setPetName(petNameMap.getOrDefault(b.getPetId(), "未知宠物"));
+            item.setTitle(b.getServiceType() != null ? b.getServiceType() : "洗澡美容");
+            item.setIcon("🛁");
             activities.add(item);
         }
 

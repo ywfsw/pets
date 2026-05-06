@@ -15,6 +15,8 @@ public class DashboardSummaryDTO {
     private long totalWeightRecords;
     private long totalHealthEvents;
     private long totalFeedings;
+    private long totalMedications;
+    private long totalBathingRecords;
     private List<ActivityItem> recentActivities;
     private List<PetOverviewItem> petOverviews;
     private List<FeedingStatItem> feedingStats;
