@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tox.tox.pets.model.DictItems;
 import com.tox.tox.pets.model.dto.DictItemLookupDTO;
+import com.tox.tox.pets.model.dto.DictItemWithParentDTO;
 import com.tox.tox.pets.service.IDictItemsService;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,12 +125,12 @@ public class DictItemsController {
     }
 
     /**
-     * 根据字典编码获取字典项列表
+     * 根据字典编码获取字典项列表（含父节点标签）
      */
     @GetMapping("/dictItems/code/{dictCode}")
-    @Operation(summary = "根据字典编码获取字典项", description = "获取指定字典编码下的所有字典项")
-    public ResponseEntity<List<DictItems>> getDictItemsByCode(@Parameter(description = "字典编码") @PathVariable String dictCode) {
-        List<DictItems> dictItems = dictItemsService.listByDictCode(dictCode);
+    @Operation(summary = "根据字典编码获取字典项", description = "获取指定字典编码下的所有字典项，包含父节点标签信息")
+    public ResponseEntity<List<DictItemWithParentDTO>> getDictItemsByCode(@Parameter(description = "字典编码") @PathVariable String dictCode) {
+        List<DictItemWithParentDTO> dictItems = dictItemsService.listWithParentByDictCode(dictCode);
         return ResponseEntity.ok(dictItems);
     }
 
