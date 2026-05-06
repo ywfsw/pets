@@ -89,4 +89,9 @@ public class PetDetailDTO implements Serializable {
      * 喂养记录列表
      */
     private List<FeedingRecord> feedingRecords;
+
+    /**
+     * 点赞数
+     */
+    private long likeCount;
 }

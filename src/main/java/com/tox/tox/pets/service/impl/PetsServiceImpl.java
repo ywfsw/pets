@@ -256,6 +256,9 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         List<FeedingRecord> feedingRecords = feedingRecordService.list(feedingQuery);
         detailDTO.setFeedingRecords(feedingRecords);
 
+        // 8. 查询点赞数
+        detailDTO.setLikeCount(likingService.getPetLikeCount(id));
+
         return detailDTO;
     }
 
