@@ -25,3 +25,13 @@ CREATE TABLE IF NOT EXISTS feeding_records (
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 洗澡美容记录表
+CREATE TABLE IF NOT EXISTS bathing_records (
+    id SERIAL PRIMARY KEY,
+    pet_id BIGINT NOT NULL,
+    bath_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    service_type VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

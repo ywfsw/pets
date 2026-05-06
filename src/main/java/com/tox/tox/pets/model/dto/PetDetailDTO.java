@@ -1,5 +1,6 @@
 package com.tox.tox.pets.model.dto;
 
+import com.tox.tox.pets.model.BathingRecord;
 import com.tox.tox.pets.model.FeedingRecord;
 import com.tox.tox.pets.model.WeightLog;
 import lombok.Getter;
@@ -89,6 +90,11 @@ public class PetDetailDTO implements Serializable {
      * 喂养记录列表
      */
     private List<FeedingRecord> feedingRecords;
+
+    /**
+     * 洗澡美容记录列表
+     */
+    private List<BathingRecord> bathingRecords;
 
     /**
      * 点赞数
