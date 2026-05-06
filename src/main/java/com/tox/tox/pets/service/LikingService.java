@@ -138,6 +138,35 @@ public class LikingService {
         return countsMap;
     }
 
+    /**
+     * 删除宠物时清理其点赞数据（Redis like count + leaderboard 条目）
+     */
+    public void removePetLikes(Long petId) {
+        if (petId == null) return;
+
+        // 1. 删除 like count key
+        String likeCountKey = "pet:like:count:" + petId;
+        redisTemplate.delete(likeCountKey);
+
+        // 2. 从 leaderboard ZSET 中移除该宠物的条目
+        Set<String> allMembers = redisTemplate.opsForZSet().range(PETS_LEADERBOARD_KEY, 0, -1);
+        if (allMembers == null || allMembers.isEmpty()) return;
+
+        for (String memberJson : allMembers) {
+            try {
+                Map<?, ?> map = objectMapper.readValue(memberJson, Map.class);
+                Object id = map.get("petId");
+                if (id != null && Long.valueOf(id.toString()).equals(petId)) {
+                    redisTemplate.opsForZSet().remove(PETS_LEADERBOARD_KEY, memberJson);
+                    log.info("已从排行榜移除宠物点赞数据, Pet ID: {}", petId);
+                    break;
+                }
+            } catch (Exception e) {
+                log.warn("解析排行榜成员失败, 跳过: {}", memberJson, e);
+            }
+        }
+    }
+
     public List<ZSetOperations.TypedTuple<String>> getLeaderboard(int topN) {
         Set<ZSetOperations.TypedTuple<String>> range = redisTemplate.opsForZSet()
                 .reverseRangeWithScores(PETS_LEADERBOARD_KEY, 0, topN - 1);

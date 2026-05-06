@@ -50,6 +50,9 @@ public class PetsController {
     @Autowired
     private IPetGalleryService petGalleryService;
 
+    @Autowired
+    private LikingService likingService;
+
     /**
      * 添加宠物 - 需要登录
      */
@@ -280,7 +283,7 @@ public class PetsController {
             boolean deleted = petsService.removeById(id);
 
             if (deleted) {
-
+                likingService.removePetLikes(id);
                 return ResponseEntity.noContent().build();
 
             } else {
