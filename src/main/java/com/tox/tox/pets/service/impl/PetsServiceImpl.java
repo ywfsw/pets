@@ -796,6 +796,55 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             }
         }
 
+        // 5. Birthday reminders (birthday within next 7 days)
+        for (Pets pet : allPets) {
+            if (pet.getBirthday() == null) continue;
+            LocalDate thisYearBday;
+            try {
+                thisYearBday = pet.getBirthday().withYear(today.getYear());
+            } catch (java.time.DateTimeException e) {
+                // Feb 29 in a non-leap year → use Feb 28
+                thisYearBday = LocalDate.of(today.getYear(), 2, 28);
+            }
+            if (thisYearBday.isBefore(today)) {
+                try {
+                    thisYearBday = pet.getBirthday().withYear(today.getYear() + 1);
+                } catch (java.time.DateTimeException e) {
+                    thisYearBday = LocalDate.of(today.getYear() + 1, 2, 28);
+                }
+            }
+            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, thisYearBday);
+            if (daysUntil > 7) continue;
+
+            int currentAge = today.getYear() - pet.getBirthday().getYear();
+            if (today.getDayOfYear() < pet.getBirthday().getDayOfYear()) {
+                currentAge--;
+            }
+            int nextAge = currentAge + 1;
+
+            NotificationItemDTO dto = new NotificationItemDTO();
+            dto.setType("birthday");
+            dto.setPetId(pet.getId());
+            dto.setPetName(pet.getName());
+            dto.setSourceId("bday-" + pet.getId());
+            dto.setPageTarget("health-overview");
+
+            if (daysUntil == 0) {
+                dto.setMessage("🎂 今天是" + pet.getName() + "的生日！");
+                dto.setDetail(pet.getName() + "今天满 " + nextAge + " 岁啦，生日快乐！🎉");
+                dto.setUrgency(0);
+            } else if (daysUntil <= 3) {
+                dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
+                dto.setDetail(pet.getName() + "即将满 " + nextAge + " 岁");
+                dto.setUrgency(2);
+            } else {
+                dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
+                dto.setDetail(pet.getName() + "将在 " + daysUntil + " 天后满 " + nextAge + " 岁");
+                dto.setUrgency(3);
+            }
+            notifications.add(dto);
+        }
+
         notifications.sort((a, b) -> {
             int cmp = Integer.compare(a.getUrgency(), b.getUrgency());
             if (cmp != 0) return cmp;
