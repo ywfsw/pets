@@ -82,10 +82,10 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         // 1. (DB) 创建 MP 分页对象
         IPage<Pets> petPageConfig = new Page<>(pageNum, pageSize);
 
-        // 2. (DB) 构建查询条件，支持名称搜索、物种筛选、性别筛选
+        // 2. (DB) 构建查询条件，支持名称/备注搜索、物种筛选、性别筛选
         QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
         if (name != null && !name.trim().isEmpty()) {
-            queryWrapper.like("name", name.trim());
+            queryWrapper.and(w -> w.like("name", name.trim()).or().like("notes", name.trim()));
         }
         if (speciesId != null) {
             queryWrapper.eq("species_id", speciesId);
