@@ -39,6 +39,7 @@ public class DashboardSummaryDTO {
         private String breedName;
         private String latestWeight;
         private long pendingEventsCount;
+        private String avatarUrl;
     }
 
     @Data

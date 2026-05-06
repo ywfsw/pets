@@ -409,6 +409,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
                 overview.setBreedName(dictLabelMap.getOrDefault(pet.getBreedId(), null));
                 overview.setLatestWeight(petLatestWeightMap.get(pet.getId()));
                 overview.setPendingEventsCount(petPendingCountMap.getOrDefault(pet.getId(), 0L));
+                overview.setAvatarUrl(pet.getProfileImageUrl());
                 petOverviews.add(overview);
             }
         }
