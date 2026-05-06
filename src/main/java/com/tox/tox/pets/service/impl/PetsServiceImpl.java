@@ -466,6 +466,10 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
                 petLatestWeightMap.putIfAbsent(w.getPetId(), w.getWeightKg() + " kg");
             }
 
+            // 点赞数映射
+            List<Long> petIdsForLikes = allPets.stream().map(Pets::getId).collect(Collectors.toList());
+            Map<Long, Long> likeCountsMap = likingService.getPetLikeCounts(petIdsForLikes);
+
             for (Pets pet : allPets) {
                 DashboardSummaryDTO.PetOverviewItem overview = new DashboardSummaryDTO.PetOverviewItem();
                 overview.setId(pet.getId());
@@ -476,6 +480,7 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
                 overview.setBreedName(dictLabelMap.getOrDefault(pet.getBreedId(), null));
                 overview.setLatestWeight(petLatestWeightMap.get(pet.getId()));
                 overview.setPendingEventsCount(petPendingCountMap.getOrDefault(pet.getId(), 0L));
+                overview.setLikeCount(likeCountsMap.getOrDefault(pet.getId(), 0L));
                 overview.setAvatarUrl(pet.getProfileImageUrl());
                 petOverviews.add(overview);
             }
