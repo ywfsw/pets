@@ -8,6 +8,7 @@ import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.mapper.PetsMapper;
 import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
+import com.tox.tox.pets.model.dto.HealthReportDTO;
 import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
 import com.tox.tox.pets.service.*;
@@ -545,6 +546,123 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         summary.setFeedingStats(feedingStats);
 
         return summary;
+    }
+
+    @Override
+    public HealthReportDTO getHealthReport(Long petId, int months) {
+        Pets pet = this.getById(petId);
+        if (pet == null) {
+            return null;
+        }
+
+        HealthReportDTO report = new HealthReportDTO();
+        report.setPetId(petId);
+        report.setPetName(pet.getName());
+        report.setMonths(months);
+
+        if (pet.getSpeciesId() != null) {
+            DictItems speciesDict = dictItemsService.getById(pet.getSpeciesId());
+            if (speciesDict != null) report.setSpeciesLabel(speciesDict.getItemLabel());
+        }
+        if (pet.getBreedId() != null) {
+            DictItems breedDict = dictItemsService.getById(pet.getBreedId());
+            if (breedDict != null) report.setBreedLabel(breedDict.getItemLabel());
+        }
+
+        LocalDate startDate = LocalDate.now().minusMonths(months);
+
+        // Weight logs
+        QueryWrapper<WeightLog> weightQuery = new QueryWrapper<>();
+        weightQuery.eq("pet_id", petId);
+        weightQuery.ge("log_date", startDate);
+        weightQuery.orderByAsc("log_date");
+        List<WeightLog> weightLogs = weightLogService.list(weightQuery);
+
+        // Health events
+        QueryWrapper<HealthEvents> eventQuery = new QueryWrapper<>();
+        eventQuery.eq("pet_id", petId);
+        eventQuery.ge("event_date", startDate);
+        List<HealthEvents> healthEvents = healthEventsService.list(eventQuery);
+
+        // Feeding records
+        QueryWrapper<FeedingRecord> feedingQuery = new QueryWrapper<>();
+        feedingQuery.eq("pet_id", petId);
+        feedingQuery.ge("feed_time", startDate.atStartOfDay().atOffset(java.time.ZoneOffset.UTC));
+        List<FeedingRecord> feedingRecords = feedingRecordService.list(feedingQuery);
+
+        // Bathing records
+        QueryWrapper<BathingRecord> bathingQuery = new QueryWrapper<>();
+        bathingQuery.eq("pet_id", petId);
+        bathingQuery.ge("bath_time", startDate.atStartOfDay().atOffset(java.time.ZoneOffset.UTC));
+        List<BathingRecord> bathingRecords = bathingRecordService.list(bathingQuery);
+
+        // Medication records
+        QueryWrapper<MedicationRecord> medicationQuery = new QueryWrapper<>();
+        medicationQuery.eq("pet_id", petId);
+        medicationQuery.ge("start_date", startDate);
+        List<MedicationRecord> medicationRecords = medicationRecordService.list(medicationQuery);
+
+        // Aggregate by month
+        java.util.LinkedHashMap<String, HealthReportDTO.MonthlyData> monthMap = new java.util.LinkedHashMap<>();
+        LocalDate current = startDate.withDayOfMonth(1);
+        LocalDate end = LocalDate.now().withDayOfMonth(1).plusMonths(1);
+        while (current.isBefore(end)) {
+            String key = current.getYear() + "-" + String.format("%02d", current.getMonthValue());
+            HealthReportDTO.MonthlyData md = new HealthReportDTO.MonthlyData();
+            md.setMonth(key);
+            monthMap.put(key, md);
+            current = current.plusMonths(1);
+        }
+
+        for (WeightLog w : weightLogs) {
+            if (w.getLogDate() == null) continue;
+            String key = w.getLogDate().getYear() + "-" + String.format("%02d", w.getLogDate().getMonthValue());
+            HealthReportDTO.MonthlyData md = monthMap.get(key);
+            if (md == null) continue;
+            md.setWeightRecords(md.getWeightRecords() + 1);
+            if (md.getWeightFirst() == null) md.setWeightFirst(w.getWeightKg());
+            md.setWeightLast(w.getWeightKg());
+            if (md.getWeightMin() == null || w.getWeightKg().compareTo(md.getWeightMin()) < 0) md.setWeightMin(w.getWeightKg());
+            if (md.getWeightMax() == null || w.getWeightKg().compareTo(md.getWeightMax()) > 0) md.setWeightMax(w.getWeightKg());
+        }
+
+        for (HealthEvents e : healthEvents) {
+            if (e.getEventDate() == null) continue;
+            String key = e.getEventDate().getYear() + "-" + String.format("%02d", e.getEventDate().getMonthValue());
+            HealthReportDTO.MonthlyData md = monthMap.get(key);
+            if (md == null) continue;
+            md.setHealthEventsTotal(md.getHealthEventsTotal() + 1);
+            if (e.getStatus() != null && e.getStatus() == 1) {
+                md.setHealthEventsCompleted(md.getHealthEventsCompleted() + 1);
+            }
+        }
+
+        for (FeedingRecord f : feedingRecords) {
+            if (f.getFeedTime() == null) continue;
+            String key = f.getFeedTime().getYear() + "-" + String.format("%02d", f.getFeedTime().getMonthValue());
+            HealthReportDTO.MonthlyData md = monthMap.get(key);
+            if (md == null) continue;
+            md.setFeedingRecords(md.getFeedingRecords() + 1);
+        }
+
+        for (BathingRecord b : bathingRecords) {
+            if (b.getBathTime() == null) continue;
+            String key = b.getBathTime().getYear() + "-" + String.format("%02d", b.getBathTime().getMonthValue());
+            HealthReportDTO.MonthlyData md = monthMap.get(key);
+            if (md == null) continue;
+            md.setBathingRecords(md.getBathingRecords() + 1);
+        }
+
+        for (MedicationRecord m : medicationRecords) {
+            if (m.getStartDate() == null) continue;
+            String key = m.getStartDate().getYear() + "-" + String.format("%02d", m.getStartDate().getMonthValue());
+            HealthReportDTO.MonthlyData md = monthMap.get(key);
+            if (md == null) continue;
+            md.setMedicationRecords(md.getMedicationRecords() + 1);
+        }
+
+        report.setMonthlyData(new ArrayList<>(monthMap.values()));
+        return report;
     }
 
     @Override

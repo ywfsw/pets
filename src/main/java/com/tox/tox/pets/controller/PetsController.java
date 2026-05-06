@@ -314,4 +314,19 @@ public class PetsController {
 
         }
 
+    /**
+     * 获取宠物月度健康报告
+     */
+    @GetMapping("/pets/{id}/health-report")
+    @Operation(summary = "宠物月度健康报告", description = "获取指定宠物的月度健康数据汇总")
+    public ResponseEntity<HealthReportDTO> getHealthReport(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "6") int months) {
+        HealthReportDTO report = petsService.getHealthReport(id, Math.min(Math.max(months, 1), 24));
+        if (report == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(report);
+    }
+
     }
