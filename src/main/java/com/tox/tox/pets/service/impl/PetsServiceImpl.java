@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,12 +84,12 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
      */
     @Override
 //    @Cacheable(value = "pets_page", key = "#pageNum + '-' + #pageSize")
-    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender) {
+    public IPage<PetPageDTO> findPetsWithLikes(int pageNum, int pageSize, String name, Long speciesId, String gender, Integer ageMinMonths, Integer ageMaxMonths) {
 
         // 1. (DB) 创建 MP 分页对象
         IPage<Pets> petPageConfig = new Page<>(pageNum, pageSize);
 
-        // 2. (DB) 构建查询条件，支持名称/备注搜索、物种筛选、性别筛选
+        // 2. (DB) 构建查询条件，支持名称/备注搜索、物种筛选、性别筛选、年龄范围筛选
         QueryWrapper<Pets> queryWrapper = new QueryWrapper<>();
         if (name != null && !name.trim().isEmpty()) {
             queryWrapper.and(w -> w.like("name", name.trim()).or().like("notes", name.trim()));
@@ -98,6 +99,17 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         }
         if (gender != null && !gender.isEmpty()) {
             queryWrapper.eq("gender", gender);
+        }
+        // 年龄范围筛选：通过 birthday 列计算，ageMaxMonths 对应最小生日（最年轻），ageMinMonths 对应最大生日（最年长）
+        // birthday >= NOW() - interval 'ageMaxMonths months'  → 生日在这个日期之后（更年轻）
+        // birthday <= NOW() - interval 'ageMinMonths months'  → 生日在这个日期之前（更年长）
+        if (ageMaxMonths != null) {
+            LocalDate minBirthday = LocalDate.now().minusMonths(ageMaxMonths);
+            queryWrapper.ge("birthday", minBirthday);
+        }
+        if (ageMinMonths != null) {
+            LocalDate maxBirthday = LocalDate.now().minusMonths(ageMinMonths);
+            queryWrapper.le("birthday", maxBirthday);
         }
 
         // 3. (DB) 执行 MP 分页查询

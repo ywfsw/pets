@@ -104,9 +104,11 @@ public class PetsController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long speciesId,
-            @RequestParam(required = false) String gender
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) Integer ageMinMonths,
+            @RequestParam(required = false) Integer ageMaxMonths
     ) {
-        IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize, name, speciesId, gender);
+        IPage<PetPageDTO> page = petsService.findPetsWithLikes(pageNum, pageSize, name, speciesId, gender, ageMinMonths, ageMaxMonths);
         //根据likeCount排序
 //        page.setRecords(page.getRecords().stream()
 //                .sorted((p1, p2) -> Long.compare(p2.getLikeCount(), p1.getLikeCount()))
