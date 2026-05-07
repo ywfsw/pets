@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tox.tox.pets.model.*;
 import com.tox.tox.pets.mapper.PetsMapper;
+import com.tox.tox.pets.model.dto.ActivityLogDTO;
 import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
 import com.tox.tox.pets.model.dto.HealthReportDTO;
@@ -946,5 +947,190 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
     @CacheEvict(value = {"pets_page", "pets_list", "pets_by_id", "pets_leaderboard", "pets_detail_by_id", "pets_by_species"}, allEntries = true)
     public boolean removeById(Serializable id) {
         return super.removeById(id);
+    }
+
+    @Override
+    public ActivityLogDTO getActivityLog(Long petId, String type, int pageNum, int pageSize) {
+        ActivityLogDTO result = new ActivityLogDTO();
+        List<ActivityLogDTO.ActivityLogItem> allActivities = new ArrayList<>();
+
+        // 批量查询宠物名称
+        List<Pets> allPets = this.list();
+        Map<Long, String> petNameMap = allPets.stream()
+                .collect(Collectors.toMap(Pets::getId, Pets::getName, (a, b) -> a));
+
+        // 批量查询事件类型标签
+        List<DictItems> allEventTypes = dictItemsService.list();
+        Map<Long, String> eventTypeLabelMap = allEventTypes.stream()
+                .collect(Collectors.toMap(DictItems::getId, DictItems::getItemLabel, (a, b) -> a));
+
+        long weightCount = 0, healthCount = 0, feedingCount = 0;
+        long photoCount = 0, medicationCount = 0, bathingCount = 0;
+
+        // 1. 体重记录
+        if (type == null || type.isEmpty() || "weight".equals(type)) {
+            QueryWrapper<WeightLog> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("log_date");
+            List<WeightLog> items = weightLogService.list(q);
+            weightCount = items.size();
+            for (WeightLog w : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("w-" + w.getId());
+                item.setType("weight");
+                item.setPetId(w.getPetId());
+                item.setPetName(petNameMap.getOrDefault(w.getPetId(), "未知宠物"));
+                item.setTitle("体重记录");
+                item.setDetail(w.getWeightKg() != null ? w.getWeightKg() + " kg" : "");
+                item.setDate(w.getLogDate() != null ? w.getLogDate().toString() : null);
+                item.setIcon("⚖️");
+                item.setColor("#0EA5E9");
+                allActivities.add(item);
+            }
+        }
+
+        // 2. 健康事件
+        if (type == null || type.isEmpty() || "health".equals(type)) {
+            QueryWrapper<HealthEvents> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("event_date");
+            List<HealthEvents> items = healthEventsService.list(q);
+            healthCount = items.size();
+            for (HealthEvents e : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("h-" + e.getId());
+                item.setType("health");
+                item.setPetId(e.getPetId());
+                item.setPetName(petNameMap.getOrDefault(e.getPetId(), "未知宠物"));
+                item.setTitle("健康事件");
+                item.setDetail(eventTypeLabelMap.getOrDefault(e.getEventTypeId(), ""));
+                item.setDate(e.getEventDate() != null ? e.getEventDate().toString() : null);
+                item.setIcon("🩺");
+                item.setColor("#059669");
+                allActivities.add(item);
+            }
+        }
+
+        // 3. 喂养记录
+        if (type == null || type.isEmpty() || "feeding".equals(type)) {
+            QueryWrapper<FeedingRecord> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("feed_time");
+            List<FeedingRecord> items = feedingRecordService.list(q);
+            feedingCount = items.size();
+            for (FeedingRecord f : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("f-" + f.getId());
+                item.setType("feeding");
+                item.setPetId(f.getPetId());
+                item.setPetName(petNameMap.getOrDefault(f.getPetId(), "未知宠物"));
+                item.setTitle("喂养记录");
+                String amount = f.getAmountGrams() != null ? f.getAmountGrams() + "g" : "";
+                String detail = f.getFoodType() != null ? f.getFoodType() : "";
+                if (!amount.isEmpty()) detail += (detail.isEmpty() ? "" : " · ") + amount;
+                item.setDetail(detail);
+                item.setDate(f.getFeedTime() != null ? f.getFeedTime().toLocalDate().toString() : null);
+                item.setIcon("🍽️");
+                item.setColor("#D97706");
+                allActivities.add(item);
+            }
+        }
+
+        // 4. 相册照片
+        if (type == null || type.isEmpty() || "photo".equals(type)) {
+            QueryWrapper<PetGallery> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("created_at");
+            List<PetGallery> items = petGalleryService.list(q);
+            photoCount = items.size();
+            for (PetGallery p : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("p-" + p.getId());
+                item.setType("photo");
+                item.setPetId(p.getPetId());
+                item.setPetName(petNameMap.getOrDefault(p.getPetId(), "未知宠物"));
+                item.setTitle("上传照片");
+                item.setDetail(p.getDescription() != null ? p.getDescription() : "");
+                item.setDate(p.getCreatedAt() != null ? p.getCreatedAt().toLocalDate().toString() : null);
+                item.setIcon("📷");
+                item.setColor("#9333EA");
+                allActivities.add(item);
+            }
+        }
+
+        // 5. 用药记录
+        if (type == null || type.isEmpty() || "medication".equals(type)) {
+            QueryWrapper<MedicationRecord> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("start_date");
+            List<MedicationRecord> items = medicationRecordService.list(q);
+            medicationCount = items.size();
+            for (MedicationRecord m : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("m-" + m.getId());
+                item.setType("medication");
+                item.setPetId(m.getPetId());
+                item.setPetName(petNameMap.getOrDefault(m.getPetId(), "未知宠物"));
+                item.setTitle("用药记录");
+                String dosage = m.getDosage() != null && !m.getDosage().isEmpty() ? " · " + m.getDosage() : "";
+                item.setDetail(m.getMedicationName() + dosage);
+                item.setDate(m.getStartDate() != null ? m.getStartDate().toString() : null);
+                item.setIcon("💊");
+                item.setColor("#7C3AED");
+                allActivities.add(item);
+            }
+        }
+
+        // 6. 洗澡美容
+        if (type == null || type.isEmpty() || "bathing".equals(type)) {
+            QueryWrapper<BathingRecord> q = new QueryWrapper<>();
+            if (petId != null) q.eq("pet_id", petId);
+            q.orderByDesc("bath_time");
+            List<BathingRecord> items = bathingRecordService.list(q);
+            bathingCount = items.size();
+            for (BathingRecord b : items) {
+                ActivityLogDTO.ActivityLogItem item = new ActivityLogDTO.ActivityLogItem();
+                item.setId("b-" + b.getId());
+                item.setType("bathing");
+                item.setPetId(b.getPetId());
+                item.setPetName(petNameMap.getOrDefault(b.getPetId(), "未知宠物"));
+                item.setTitle("洗澡美容");
+                item.setDetail(b.getServiceType() != null ? b.getServiceType() : "");
+                item.setDate(b.getBathTime() != null ? b.getBathTime().toLocalDate().toString() : null);
+                item.setIcon("🛁");
+                item.setColor("#0891B2");
+                allActivities.add(item);
+            }
+        }
+
+        // 按日期降序排序
+        allActivities.sort((a, b) -> {
+            if (a.getDate() == null && b.getDate() == null) return 0;
+            if (a.getDate() == null) return 1;
+            if (b.getDate() == null) return -1;
+            return b.getDate().compareTo(a.getDate());
+        });
+
+        // 统计
+        ActivityLogDTO.ActivityStats stats = new ActivityLogDTO.ActivityStats();
+        stats.setTotalActivities(allActivities.size());
+        stats.setWeightCount(weightCount);
+        stats.setHealthCount(healthCount);
+        stats.setFeedingCount(feedingCount);
+        stats.setPhotoCount(photoCount);
+        stats.setMedicationCount(medicationCount);
+        stats.setBathingCount(bathingCount);
+        result.setStats(stats);
+        result.setTotal(allActivities.size());
+
+        // 分页
+        int fromIndex = (pageNum - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, allActivities.size());
+        List<ActivityLogDTO.ActivityLogItem> pageItems = fromIndex < allActivities.size()
+                ? allActivities.subList(fromIndex, toIndex)
+                : new ArrayList<>();
+        result.setActivities(pageItems);
+
+        return result;
     }
 }

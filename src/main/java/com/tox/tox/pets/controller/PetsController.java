@@ -362,4 +362,20 @@ public class PetsController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 活动日志 - 聚合所有宠物活动记录
+     */
+    @GetMapping("/activity-log")
+    @Operation(summary = "活动日志", description = "聚合所有宠物活动记录，支持按宠物和类型筛选")
+    public ResponseEntity<ActivityLogDTO> getActivityLog(
+            @RequestParam(required = false) Long petId,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        pageSize = Math.min(pageSize, 100);
+        pageNum = Math.max(pageNum, 1);
+        ActivityLogDTO log = petsService.getActivityLog(petId, type, pageNum, pageSize);
+        return ResponseEntity.ok(log);
     }
+
+}

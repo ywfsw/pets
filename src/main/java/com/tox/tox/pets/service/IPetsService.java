@@ -44,4 +44,6 @@ public interface IPetsService extends IService<Pets> {
     NotificationPrefsDTO getNotificationPrefs(long userId);
 
     void saveNotificationPrefs(long userId, NotificationPrefsDTO prefs);
+
+    ActivityLogDTO getActivityLog(Long petId, String type, int pageNum, int pageSize);
 }
