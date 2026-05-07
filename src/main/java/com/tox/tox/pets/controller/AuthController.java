@@ -52,6 +52,7 @@ public class AuthController {
             userInfo.put("id", user.getId());
             userInfo.put("username", user.getUsername());
             userInfo.put("role", user.getRole());
+            userInfo.put("createdAt", user.getCreatedAt());
             return ResponseEntity.ok(userInfo);
         }
         return ResponseEntity.notFound().build();
@@ -61,5 +62,30 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         StpUtil.logout();
         return ResponseEntity.ok(Map.of("message", "已登出"));
+    }
+
+    @SaCheckLogin
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+        try {
+            String oldPassword = request.get("oldPassword");
+            String newPassword = request.get("newPassword");
+
+            if (oldPassword == null || oldPassword.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "请输入原密码"));
+            }
+            if (newPassword == null || newPassword.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "请输入新密码"));
+            }
+
+            long userId = StpUtil.getLoginIdAsLong();
+            usersService.changePassword(userId, oldPassword, newPassword);
+
+            // 修改密码后登出，需要重新登录
+            StpUtil.logout();
+            return ResponseEntity.ok(Map.of("message", "密码修改成功，请重新登录"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

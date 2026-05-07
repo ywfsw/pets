@@ -341,4 +341,25 @@ public class PetsController {
         return ResponseEntity.ok(summary);
     }
 
+    @SaCheckLogin
+    @GetMapping("/notifications/prefs")
+    @Operation(summary = "获取通知偏好设置", description = "获取当前用户的个性化通知配置")
+    public ResponseEntity<NotificationPrefsDTO> getNotificationPrefs() {
+        long userId = StpUtil.getLoginIdAsLong();
+        NotificationPrefsDTO prefs = petsService.getNotificationPrefs(userId);
+        if (prefs == null) {
+            prefs = new NotificationPrefsDTO(true, true, true, true, true, 7, 7);
+        }
+        return ResponseEntity.ok(prefs);
+    }
+
+    @PutMapping("/notifications/prefs")
+    @SaCheckLogin
+    @Operation(summary = "保存通知偏好设置", description = "保存当前用户的个性化通知配置")
+    public ResponseEntity<?> saveNotificationPrefs(@RequestBody NotificationPrefsDTO prefs) {
+        long userId = StpUtil.getLoginIdAsLong();
+        petsService.saveNotificationPrefs(userId, prefs);
+        return ResponseEntity.ok().build();
+    }
+
     }

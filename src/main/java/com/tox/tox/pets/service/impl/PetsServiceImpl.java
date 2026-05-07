@@ -10,6 +10,7 @@ import com.tox.tox.pets.model.dto.DashboardSummaryDTO;
 import com.tox.tox.pets.model.dto.HealthEventsDTO;
 import com.tox.tox.pets.model.dto.HealthReportDTO;
 import com.tox.tox.pets.model.dto.NotificationItemDTO;
+import com.tox.tox.pets.model.dto.NotificationPrefsDTO;
 import com.tox.tox.pets.model.dto.PetDetailDTO;
 import com.tox.tox.pets.model.dto.PetPageDTO;
 import com.tox.tox.pets.service.*;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 
 import com.tox.tox.pets.model.dto.PetLeaderboardDTO;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.time.OffsetDateTime;
@@ -75,6 +77,9 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
 
     @Autowired
     private ObjectMapper objectMapper; // 新增
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @Autowired
     public void setLikingService(LikingService likingService) {
@@ -674,6 +679,22 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
             return notifications;
         }
 
+        // Read user notification preferences
+        NotificationPrefsDTO prefs = null;
+        try {
+            long userId = cn.dev33.satoken.stp.StpUtil.getLoginIdAsLong();
+            prefs = getNotificationPrefs(userId);
+        } catch (Exception ignored) {
+            // Not logged in, use defaults
+        }
+        boolean healthEnabled = prefs == null || prefs.getHealthEnabled() == null || prefs.getHealthEnabled();
+        boolean medicationEnabled = prefs == null || prefs.getMedicationEnabled() == null || prefs.getMedicationEnabled();
+        boolean feedingEnabled = prefs == null || prefs.getFeedingEnabled() == null || prefs.getFeedingEnabled();
+        boolean bathingEnabled = prefs == null || prefs.getBathingEnabled() == null || prefs.getBathingEnabled();
+        boolean birthdayEnabled = prefs == null || prefs.getBirthdayEnabled() == null || prefs.getBirthdayEnabled();
+        int healthDaysBefore = prefs != null && prefs.getHealthDaysBefore() != null ? prefs.getHealthDaysBefore() : 7;
+        int birthdayDaysBefore = prefs != null && prefs.getBirthdayDaysBefore() != null ? prefs.getBirthdayDaysBefore() : 7;
+
         Map<Long, String> petNameMap = new java.util.HashMap<>();
         for (Pets pet : allPets) {
             petNameMap.put(pet.getId(), pet.getName());
@@ -681,168 +702,178 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
 
         LocalDate today = LocalDate.now();
 
-        // 1. Health event reminders (overdue + upcoming 7 days)
-        List<HealthEvents> upcomingEvents = healthEventsService.listUpcoming();
-        for (HealthEvents event : upcomingEvents) {
-            LocalDate dueDate = event.getNextDueDate();
-            if (dueDate == null) continue;
-            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, dueDate);
-            String petName = petNameMap.getOrDefault(event.getPetId(), "未知宠物");
-            String eventLabel = "健康事件";
-            try {
-                if (event.getEventTypeId() != null) {
-                    DictItems item = dictItemsService.getById(event.getEventTypeId());
-                    if (item != null) eventLabel = item.getItemLabel();
-                }
-            } catch (Exception ignored) {}
-
-            NotificationItemDTO dto = new NotificationItemDTO();
-            dto.setType("health");
-            dto.setPetId(event.getPetId());
-            dto.setPetName(petName);
-            dto.setSourceId(String.valueOf(event.getId()));
-            dto.setPageTarget("health-events");
-
-            if (daysUntil < 0) {
-                dto.setMessage(eventLabel + " 已过期 " + Math.abs(daysUntil) + " 天");
-                dto.setDetail(petName + " 的" + eventLabel + "需要处理");
-                dto.setUrgency(0);
-            } else if (daysUntil == 0) {
-                dto.setMessage(eventLabel + " 今日到期");
-                dto.setDetail(petName + " 的" + eventLabel + "今天需要处理");
-                dto.setUrgency(1);
-            } else if (daysUntil <= 3) {
-                dto.setMessage(eventLabel + " " + daysUntil + " 天后到期");
-                dto.setDetail(petName + " 的" + eventLabel + "即将到期");
-                dto.setUrgency(2);
-            } else {
-                dto.setMessage(eventLabel + " " + daysUntil + " 天后到期");
-                dto.setDetail(petName + " 的" + eventLabel + "将在 " + daysUntil + " 天后到期");
-                dto.setUrgency(3);
-            }
-            notifications.add(dto);
-        }
-
-        // 2. Active medication reminders
-        for (Pets pet : allPets) {
-            List<MedicationRecord> meds = medicationRecordService.listByPetId(pet.getId());
-            for (MedicationRecord med : meds) {
-                if (med.getEndDate() != null && med.getEndDate().isBefore(today)) continue;
-                long daysRemaining = med.getEndDate() != null ?
-                    java.time.temporal.ChronoUnit.DAYS.between(today, med.getEndDate()) : 999;
+        // 1. Health event reminders (overdue + upcoming within healthDaysBefore days)
+        if (healthEnabled) {
+            List<HealthEvents> upcomingEvents = healthEventsService.listUpcoming();
+            for (HealthEvents event : upcomingEvents) {
+                LocalDate dueDate = event.getNextDueDate();
+                if (dueDate == null) continue;
+                long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, dueDate);
+                if (daysUntil > healthDaysBefore) continue;
+                String petName = petNameMap.getOrDefault(event.getPetId(), "未知宠物");
+                String eventLabel = "健康事件";
+                try {
+                    if (event.getEventTypeId() != null) {
+                        DictItems item = dictItemsService.getById(event.getEventTypeId());
+                        if (item != null) eventLabel = item.getItemLabel();
+                    }
+                } catch (Exception ignored) {}
 
                 NotificationItemDTO dto = new NotificationItemDTO();
-                dto.setType("medication");
-                dto.setPetId(pet.getId());
-                dto.setPetName(pet.getName());
-                dto.setSourceId(String.valueOf(med.getId()));
-                dto.setPageTarget("medication-records");
+                dto.setType("health");
+                dto.setPetId(event.getPetId());
+                dto.setPetName(petName);
+                dto.setSourceId(String.valueOf(event.getId()));
+                dto.setPageTarget("health-events");
 
-                if (med.getEndDate() != null && daysRemaining <= 3) {
-                    dto.setMessage("💊 " + med.getMedicationName() + " 即将结束");
-                    dto.setDetail(med.getDosage() != null ? "剂量：" + med.getDosage() : "用药疗程即将完成");
+                if (daysUntil < 0) {
+                    dto.setMessage(eventLabel + " 已过期 " + Math.abs(daysUntil) + " 天");
+                    dto.setDetail(petName + " 的" + eventLabel + "需要处理");
+                    dto.setUrgency(0);
+                } else if (daysUntil == 0) {
+                    dto.setMessage(eventLabel + " 今日到期");
+                    dto.setDetail(petName + " 的" + eventLabel + "今天需要处理");
                     dto.setUrgency(1);
+                } else if (daysUntil <= 3) {
+                    dto.setMessage(eventLabel + " " + daysUntil + " 天后到期");
+                    dto.setDetail(petName + " 的" + eventLabel + "即将到期");
+                    dto.setUrgency(2);
                 } else {
-                    dto.setMessage("💊 " + med.getMedicationName() + " 正在服用中");
-                    dto.setDetail(med.getFrequency() != null ? "频率：" + med.getFrequency() : "请按时给药");
+                    dto.setMessage(eventLabel + " " + daysUntil + " 天后到期");
+                    dto.setDetail(petName + " 的" + eventLabel + "将在 " + daysUntil + " 天后到期");
                     dto.setUrgency(3);
                 }
                 notifications.add(dto);
             }
         }
 
-        // 3. Feeding reminders (not fed today)
-        for (Pets pet : allPets) {
-            List<FeedingRecord> feedings = feedingRecordService.listByPetId(pet.getId());
-            boolean fedToday = feedings.stream().anyMatch(f ->
-                f.getFeedTime() != null && f.getFeedTime().toLocalDate().equals(today)
-            );
-            if (!fedToday && !feedings.isEmpty()) {
-                NotificationItemDTO dto = new NotificationItemDTO();
-                dto.setType("feeding");
-                dto.setPetId(pet.getId());
-                dto.setPetName(pet.getName());
-                dto.setMessage("🍽️ " + pet.getName() + " 今天还没有喂食记录");
-                dto.setDetail("记得给" + pet.getName() + "准备食物哦");
-                dto.setUrgency(2);
-                dto.setPageTarget("feeding-records");
-                notifications.add(dto);
-            }
-        }
+        // 2. Active medication reminders
+        if (medicationEnabled) {
+            for (Pets pet : allPets) {
+                List<MedicationRecord> meds = medicationRecordService.listByPetId(pet.getId());
+                for (MedicationRecord med : meds) {
+                    if (med.getEndDate() != null && med.getEndDate().isBefore(today)) continue;
+                    long daysRemaining = med.getEndDate() != null ?
+                        java.time.temporal.ChronoUnit.DAYS.between(today, med.getEndDate()) : 999;
 
-        // 4. Bathing reminders (not groomed in 30+ days)
-        for (Pets pet : allPets) {
-            List<BathingRecord> baths = bathingRecordService.listByPetId(pet.getId());
-            if (baths.isEmpty()) continue;
-            OffsetDateTime lastBath = baths.stream()
-                .map(BathingRecord::getBathTime)
-                .filter(java.util.Objects::nonNull)
-                .max(OffsetDateTime::compareTo)
-                .orElse(null);
-            if (lastBath != null) {
-                long daysSince = java.time.temporal.ChronoUnit.DAYS.between(
-                    lastBath.toLocalDate(), today);
-                if (daysSince >= 30) {
                     NotificationItemDTO dto = new NotificationItemDTO();
-                    dto.setType("bathing");
+                    dto.setType("medication");
                     dto.setPetId(pet.getId());
                     dto.setPetName(pet.getName());
-                    dto.setMessage("🛁 " + pet.getName() + " 已 " + daysSince + " 天未美容");
-                    dto.setDetail("上次美容：" + lastBath.toLocalDate());
-                    dto.setUrgency(daysSince >= 60 ? 1 : 3);
-                    dto.setPageTarget("bathing-records");
+                    dto.setSourceId(String.valueOf(med.getId()));
+                    dto.setPageTarget("medication-records");
+
+                    if (med.getEndDate() != null && daysRemaining <= 3) {
+                        dto.setMessage("💊 " + med.getMedicationName() + " 即将结束");
+                        dto.setDetail(med.getDosage() != null ? "剂量：" + med.getDosage() : "用药疗程即将完成");
+                        dto.setUrgency(1);
+                    } else {
+                        dto.setMessage("💊 " + med.getMedicationName() + " 正在服用中");
+                        dto.setDetail(med.getFrequency() != null ? "频率：" + med.getFrequency() : "请按时给药");
+                        dto.setUrgency(3);
+                    }
                     notifications.add(dto);
                 }
             }
         }
 
-        // 5. Birthday reminders (birthday within next 7 days)
-        for (Pets pet : allPets) {
-            if (pet.getBirthday() == null) continue;
-            LocalDate thisYearBday;
-            try {
-                thisYearBday = pet.getBirthday().withYear(today.getYear());
-            } catch (java.time.DateTimeException e) {
-                // Feb 29 in a non-leap year → use Feb 28
-                thisYearBday = LocalDate.of(today.getYear(), 2, 28);
-            }
-            if (thisYearBday.isBefore(today)) {
-                try {
-                    thisYearBday = pet.getBirthday().withYear(today.getYear() + 1);
-                } catch (java.time.DateTimeException e) {
-                    thisYearBday = LocalDate.of(today.getYear() + 1, 2, 28);
+        // 3. Feeding reminders (not fed today)
+        if (feedingEnabled) {
+            for (Pets pet : allPets) {
+                List<FeedingRecord> feedings = feedingRecordService.listByPetId(pet.getId());
+                boolean fedToday = feedings.stream().anyMatch(f ->
+                    f.getFeedTime() != null && f.getFeedTime().toLocalDate().equals(today)
+                );
+                if (!fedToday && !feedings.isEmpty()) {
+                    NotificationItemDTO dto = new NotificationItemDTO();
+                    dto.setType("feeding");
+                    dto.setPetId(pet.getId());
+                    dto.setPetName(pet.getName());
+                    dto.setMessage("🍽️ " + pet.getName() + " 今天还没有喂食记录");
+                    dto.setDetail("记得给" + pet.getName() + "准备食物哦");
+                    dto.setUrgency(2);
+                    dto.setPageTarget("feeding-records");
+                    notifications.add(dto);
                 }
             }
-            long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, thisYearBday);
-            if (daysUntil > 7) continue;
+        }
 
-            int currentAge = today.getYear() - pet.getBirthday().getYear();
-            if (today.getDayOfYear() < pet.getBirthday().getDayOfYear()) {
-                currentAge--;
+        // 4. Bathing reminders (not groomed in 30+ days)
+        if (bathingEnabled) {
+            for (Pets pet : allPets) {
+                List<BathingRecord> baths = bathingRecordService.listByPetId(pet.getId());
+                if (baths.isEmpty()) continue;
+                OffsetDateTime lastBath = baths.stream()
+                    .map(BathingRecord::getBathTime)
+                    .filter(java.util.Objects::nonNull)
+                    .max(OffsetDateTime::compareTo)
+                    .orElse(null);
+                if (lastBath != null) {
+                    long daysSince = java.time.temporal.ChronoUnit.DAYS.between(
+                        lastBath.toLocalDate(), today);
+                    if (daysSince >= 30) {
+                        NotificationItemDTO dto = new NotificationItemDTO();
+                        dto.setType("bathing");
+                        dto.setPetId(pet.getId());
+                        dto.setPetName(pet.getName());
+                        dto.setMessage("🛁 " + pet.getName() + " 已 " + daysSince + " 天未美容");
+                        dto.setDetail("上次美容：" + lastBath.toLocalDate());
+                        dto.setUrgency(daysSince >= 60 ? 1 : 3);
+                        dto.setPageTarget("bathing-records");
+                        notifications.add(dto);
+                    }
+                }
             }
-            int nextAge = currentAge + 1;
+        }
 
-            NotificationItemDTO dto = new NotificationItemDTO();
-            dto.setType("birthday");
-            dto.setPetId(pet.getId());
-            dto.setPetName(pet.getName());
-            dto.setSourceId("bday-" + pet.getId());
-            dto.setPageTarget("health-overview");
+        // 5. Birthday reminders (birthday within next birthdayDaysBefore days)
+        if (birthdayEnabled) {
+            for (Pets pet : allPets) {
+                if (pet.getBirthday() == null) continue;
+                LocalDate thisYearBday;
+                try {
+                    thisYearBday = pet.getBirthday().withYear(today.getYear());
+                } catch (java.time.DateTimeException e) {
+                    thisYearBday = LocalDate.of(today.getYear(), 2, 28);
+                }
+                if (thisYearBday.isBefore(today)) {
+                    try {
+                        thisYearBday = pet.getBirthday().withYear(today.getYear() + 1);
+                    } catch (java.time.DateTimeException e) {
+                        thisYearBday = LocalDate.of(today.getYear() + 1, 2, 28);
+                    }
+                }
+                long daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, thisYearBday);
+                if (daysUntil > birthdayDaysBefore) continue;
 
-            if (daysUntil == 0) {
-                dto.setMessage("🎂 今天是" + pet.getName() + "的生日！");
-                dto.setDetail(pet.getName() + "今天满 " + nextAge + " 岁啦，生日快乐！🎉");
-                dto.setUrgency(0);
-            } else if (daysUntil <= 3) {
-                dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
-                dto.setDetail(pet.getName() + "即将满 " + nextAge + " 岁");
-                dto.setUrgency(2);
-            } else {
-                dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
-                dto.setDetail(pet.getName() + "将在 " + daysUntil + " 天后满 " + nextAge + " 岁");
-                dto.setUrgency(3);
+                int currentAge = today.getYear() - pet.getBirthday().getYear();
+                if (today.getDayOfYear() < pet.getBirthday().getDayOfYear()) {
+                    currentAge--;
+                }
+                int nextAge = currentAge + 1;
+
+                NotificationItemDTO dto = new NotificationItemDTO();
+                dto.setType("birthday");
+                dto.setPetId(pet.getId());
+                dto.setPetName(pet.getName());
+                dto.setSourceId("bday-" + pet.getId());
+                dto.setPageTarget("health-overview");
+
+                if (daysUntil == 0) {
+                    dto.setMessage("🎂 今天是" + pet.getName() + "的生日！");
+                    dto.setDetail(pet.getName() + "今天满 " + nextAge + " 岁啦，生日快乐！🎉");
+                    dto.setUrgency(0);
+                } else if (daysUntil <= 3) {
+                    dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
+                    dto.setDetail(pet.getName() + "即将满 " + nextAge + " 岁");
+                    dto.setUrgency(2);
+                } else {
+                    dto.setMessage("🎂 " + pet.getName() + "的生日还有 " + daysUntil + " 天");
+                    dto.setDetail(pet.getName() + "将在 " + daysUntil + " 天后满 " + nextAge + " 岁");
+                    dto.setUrgency(3);
+                }
+                notifications.add(dto);
             }
-            notifications.add(dto);
         }
 
         notifications.sort((a, b) -> {
@@ -852,6 +883,31 @@ public class PetsServiceImpl extends ServiceImpl<PetsMapper, Pets> implements IP
         });
 
         return notifications;
+    }
+
+    private static final String NOTIF_PREFS_KEY_PREFIX = "pets:notif_prefs:";
+
+    @Override
+    public NotificationPrefsDTO getNotificationPrefs(long userId) {
+        try {
+            String json = redisTemplate.opsForValue().get(NOTIF_PREFS_KEY_PREFIX + userId);
+            if (json != null) {
+                return objectMapper.readValue(json, NotificationPrefsDTO.class);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to read notification prefs for user {}: {}", userId, e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public void saveNotificationPrefs(long userId, NotificationPrefsDTO prefs) {
+        try {
+            String json = objectMapper.writeValueAsString(prefs);
+            redisTemplate.opsForValue().set(NOTIF_PREFS_KEY_PREFIX + userId, json);
+        } catch (Exception e) {
+            log.error("Failed to save notification prefs for user {}: {}", userId, e.getMessage());
+        }
     }
 
     @Override

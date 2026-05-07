@@ -57,4 +57,27 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         StpUtil.login(user.getId());
         return StpUtil.getTokenValue();
     }
+
+    @Override
+    public void changePassword(long userId, String oldPassword, String newPassword) {
+        Users user = this.getById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 验证旧密码
+        if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
+            throw new RuntimeException("原密码错误");
+        }
+
+        // 新密码长度校验
+        if (newPassword == null || newPassword.length() < 6 || newPassword.length() > 50) {
+            throw new RuntimeException("新密码长度必须在 6-50 个字符之间");
+        }
+
+        // 更新密码
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        user.setPassword(hashedPassword);
+        this.updateById(user);
+    }
 }

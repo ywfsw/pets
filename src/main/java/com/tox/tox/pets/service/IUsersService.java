@@ -21,4 +21,9 @@ public interface IUsersService extends IService<Users> {
      * 登录验证
      */
     String login(String username, String password);
+
+    /**
+     * 修改密码
+     */
+    void changePassword(long userId, String oldPassword, String newPassword);
 }
